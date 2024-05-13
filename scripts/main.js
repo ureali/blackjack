@@ -1,5 +1,3 @@
-// TODO: add bets
-
 // declare arrays of values and suits (separately)
 let cardValue = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"];
 let cardSuit = ["Clubs", "Diamonds", "Hearts", "Spades"];
