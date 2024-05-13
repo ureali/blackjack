@@ -72,33 +72,6 @@ function getValue(hand) {
                     value += 11;
                 }
                 break;
-            case "2":
-                value += 2;
-                break;
-            case "3":
-                value += 3;
-                break;
-            case "4":
-                value += 4;
-                break;
-            case "5":
-                value += 5;
-                break;
-            case "6":
-                value += 6;
-                break;
-            case "7":
-                value += 7;
-                break;
-            case "8":
-                value += 8;
-                break;
-            case "9":
-                value += 9;
-                break;
-            case "10":
-                value += 10;
-                break;
             case "Jack":
                 value += 10;
                 break;
@@ -109,7 +82,7 @@ function getValue(hand) {
                 value += 10;
                 break;
             default:
-                alert("ERROR: Can't calculate value!");
+                value += parseInt(cardValue);
                 break;
         }
     }
@@ -180,7 +153,9 @@ function calculateNewCash(cash, bet, action) {
         cash -= 1/2 * bet;
     } else if (action == "blackjack") {
         cash += 3/2 * bet;
-    }
+    } else if (action == "insurance") {
+        cash += 2 * bet;
+    } 
 
     return Math.floor(cash);
 }
@@ -193,14 +168,30 @@ while (cash > 0) {
     cardDeck = generateCardDeck(cardValue, cardSuit);
     playerHand = dealCards(cardDeck);
     dealerHand = dealCards(cardDeck);
+    dealerHand[1] = "Ace Of Spades";
     obfuscatedDealerHand = hideDealerCard(dealerHand);
 
     bet = parseInt(prompt(`Your cash is ${cash}, please enter current bet`));
     
     if (getValue(playerHand) == 21) {
         alert("Blackjack!");
-        cash = calculateNewCash(cash, currentBet, "blackjack");
+        cash = calculateNewCash(cash, bet, "blackjack");
         continue;
+    } else if (dealerHand[1].split(" ")[0] === "Ace") {
+        let insuranceBet = Math.floor(bet / 2);
+        let takeInsurance = confirm(`Dealer's face-up card is an Ace. Do you want to buy insurance for ${insuranceBet}?`);
+
+        if (takeInsurance) {
+            if (getValue(dealerHand) == 21) {
+                alert("Dealer has blackjack. Insurance pays 2:1.");
+                cash = calculateNewCash(cash, insuranceBet, "insurance");
+                continue;
+            } else {
+                alert("Dealer does not have blackjack. Insurance lost.");
+                cash = calculateNewCash(cash, insuranceBet, "lose");
+                continue;
+            }
+        }
     }
 
     while (true) {
@@ -208,11 +199,11 @@ while (cash > 0) {
         
         if (currentHandValue == 21) {
             alert("You win!");
-            cash = calculateNewCash(cash, currentBet, "win");
+            cash = calculateNewCash(cash, bet, "win");
             break;
         } else if (currentHandValue > 21) {
             alert("Bust!");
-            cash = calculateNewCash(cash, currentBet, "lose");
+            cash = calculateNewCash(cash, bet, "lose");
             break;
         }
     
