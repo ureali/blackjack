@@ -103,7 +103,7 @@ function chooseWinner(dealerValue, playerValue) {
 }
 
 // catch all end game function
-function getResults(action, playerHand, dealerHand, cardDeck, cash) {
+function getResults(action, playerHand, dealerHand, cardDeck, cash, bet) {
     // this section is used to determine the impact on bet
 
     if (action == "double") {
@@ -134,8 +134,7 @@ function getResults(action, playerHand, dealerHand, cardDeck, cash) {
     return cash;
 }
 
-function setUpTable(cardDeck, cash, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField) {
-    let bet = parseInt(betField.value) > 0;
+function setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField) {
     cashField.innerText = cash;
     let obfuscatedDealerHand = hideDealerCard(dealerHand);
 
@@ -153,6 +152,10 @@ function setUpTable(cardDeck, cash, playerHand, dealerHand, playerHandElement, d
     if (getValue(playerHand) == 21) {
         alert("Blackjack!");
         cash = calculateNewCash(cash, bet, "blackjack");
+        playerHand = dealCards(cardDeck);
+        dealerHand = dealCards(cardDeck);
+        resetTable(playerHandElement, dealerHandElement);
+        setUpTable(cardDeck, cash, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
     } else if (dealerHand[1].split(" ")[0] === "Ace") {
         let insuranceBet = Math.floor(bet / 2);
         let takeInsurance = confirm(`Dealer's face-up card is an Ace. Do you want to buy insurance for ${insuranceBet}?`);
@@ -281,6 +284,8 @@ function resetTable(playerHandElement, dealerHandElement) {
     dealerHandElement.innerHTML = "";
 }
 
+// reset game
+
 //main cycle
 window.onload= function() {
     let startButton = document.getElementById("start");
@@ -313,7 +318,9 @@ window.onload= function() {
         let playerHand = dealCards(cardDeck);
         let dealerHand = dealCards(cardDeck);
 
-        setUpTable(cardDeck, cash, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
+        let bet = parseInt(betField.value);
+
+        setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
          
         hitButton.onclick = function() {
             playerHand = hit(playerHand, cardDeck);  
@@ -325,25 +332,25 @@ window.onload= function() {
         }
         standButton.onclick = function() {
             dealerHand = playDealerTurn(dealerHand, getValue(dealerHand), cardDeck);
-            getResults("stand", playerHand, dealerHand, cardDeck, cash);
+            cash = getResults("stand", playerHand, dealerHand, cardDeck, cash, bet);
             resetDealerHandRendering(dealerHandElement);
             renderDealerHand(dealerHand, dealerHandElement);
             playerHand = dealCards(cardDeck);
             dealerHand = dealCards(cardDeck);
             resetTable(playerHandElement, dealerHandElement);
-            setUpTable(cardDeck, cash, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
+            setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
         }
         doubleButton.onclick = function() {
             playerHand = hit(playerHand, cardDeck);  
             renderCard(playerHand.at(-1), playerHandElement);
             dealerHand = playDealerTurn(dealerHand, getValue(dealerHand), cardDeck);
-            getResults("double", playerHand, dealerHand, cardDeck, cash);
+            cash = getResults("double", playerHand, dealerHand, cardDeck, cash, bet);
             resetDealerHandRendering(dealerHandElement);
             renderDealerHand(dealerHand, dealerHandElement);
             playerHand = dealCards(cardDeck);
             dealerHand = dealCards(cardDeck);
             resetTable(playerHandElement, dealerHandElement);
-            setUpTable(cardDeck, cash, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
+            setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
         }
     }        
  }
