@@ -7,6 +7,22 @@
     <script src="scripts/main.js"></script>
 </head>
 <body>
-    
+    <section id="dealerCards"></section>
+    <section id="deck">
+        <img src="cards/back.svg" alt="card back">
+    </section>
+    <section id="playerCards"></section>
+    <section id="playerUI">
+        <p>Cash: <span id="cashValue"></span></p>
+        <form action="">
+            <label for="betField">Bet</label>
+            <input name="betField" type="text" placeholder="Enter your bet..." required>
+            <button>Start</button>
+            <button disabled="disabled">Hit</button>
+            <button disabled="disabled">Stand</button>
+            <button disabled="disabled">Double Down</button>
+            <button disabled="disabled">Insurance</button>
+        </form>
+    </section>
 </body>
 </html>

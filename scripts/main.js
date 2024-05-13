@@ -161,97 +161,116 @@ function calculateNewCash(cash, bet, action) {
 }
 
 
+// rendering
+
+// render cards
+function renderCard(card) {
+    let cardFileName = card.toLowerCase().split(" ");
+
+    if (/Jack|Queen|King/.test(card)) {
+        cardFileName[2] += "2";
+    }
+
+    cardFileName = cardFileName.join("_");
+    cardFileName += ".svg";
+
+    let cardImg = document.createElement("img");
+    cardImg.src = `cards/${cardFileName}`;
+
+    document.getElementById("playerCards").appendChild(cardImg);
+}
+
 
 // main cycle
 
-while (cash > 0) {
-    cardDeck = generateCardDeck(cardValue, cardSuit);
-    playerHand = dealCards(cardDeck);
-    dealerHand = dealCards(cardDeck);
-    dealerHand[1] = "Ace Of Spades";
-    obfuscatedDealerHand = hideDealerCard(dealerHand);
+// while (cash > 0) {
+//     cardDeck = generateCardDeck(cardValue, cardSuit);
+//     playerHand = dealCards(cardDeck);
+//     dealerHand = dealCards(cardDeck);
+//     dealerHand[1] = "Ace Of Spades";
+//     obfuscatedDealerHand = hideDealerCard(dealerHand);
 
-    bet = parseInt(prompt(`Your cash is ${cash}, please enter current bet`));
+//     bet = parseInt(prompt(`Your cash is ${cash}, please enter current bet`));
     
-    if (getValue(playerHand) == 21) {
-        alert("Blackjack!");
-        cash = calculateNewCash(cash, bet, "blackjack");
-        continue;
-    } else if (dealerHand[1].split(" ")[0] === "Ace") {
-        let insuranceBet = Math.floor(bet / 2);
-        let takeInsurance = confirm(`Dealer's face-up card is an Ace. Do you want to buy insurance for ${insuranceBet}?`);
+//     if (getValue(playerHand) == 21) {
+//         alert("Blackjack!");
+//         cash = calculateNewCash(cash, bet, "blackjack");
+//         continue;
+//     } else if (dealerHand[1].split(" ")[0] === "Ace") {
+//         let insuranceBet = Math.floor(bet / 2);
+//         let takeInsurance = confirm(`Dealer's face-up card is an Ace. Do you want to buy insurance for ${insuranceBet}?`);
 
-        if (takeInsurance) {
-            if (getValue(dealerHand) == 21) {
-                alert("Dealer has blackjack. Insurance pays 2:1.");
-                cash = calculateNewCash(cash, insuranceBet, "insurance");
-                continue;
-            } else {
-                alert("Dealer does not have blackjack. Insurance lost.");
-                cash = calculateNewCash(cash, insuranceBet, "lose");
-                continue;
-            }
-        }
-    }
+//         if (takeInsurance) {
+//             if (getValue(dealerHand) == 21) {
+//                 alert("Dealer has blackjack. Insurance pays 2:1.");
+//                 cash = calculateNewCash(cash, insuranceBet, "insurance");
+//                 continue;
+//             } else {
+//                 alert("Dealer does not have blackjack. Insurance lost.");
+//                 cash = calculateNewCash(cash, insuranceBet, "lose");
+//                 continue;
+//             }
+//         }
+//     }
 
-    while (true) {
-        currentHandValue = getValue(playerHand);
+//     while (true) {
+//         currentHandValue = getValue(playerHand);
         
-        if (currentHandValue == 21) {
-            alert("You win!");
-            cash = calculateNewCash(cash, bet, "win");
-            break;
-        } else if (currentHandValue > 21) {
-            alert("Bust!");
-            cash = calculateNewCash(cash, bet, "lose");
-            break;
-        }
+//         if (currentHandValue == 21) {
+//             alert("You win!");
+//             cash = calculateNewCash(cash, bet, "win");
+//             break;
+//         } else if (currentHandValue > 21) {
+//             alert("Bust!");
+//             cash = calculateNewCash(cash, bet, "lose");
+//             break;
+//         }
     
-        userInput = prompt(`Dealer hand is: ${obfuscatedDealerHand[0] + " " + obfuscatedDealerHand[1]}
-                    Your hand is: ${playerHand}
-                    What will you do?`);
-        if (userInput == "hit") {
-            playerHand = hit(playerHand, cardDeck);  
-            continue;
-        }
-        else if (userInput == "surrender") {
-            alert("You surrender!");
-            cash = calculateNewCash(cash, bet, "surrender");
-            break;
-        }
-        else if (userInput == "stand" || userInput == "double down") {
-            // this section is used to determine the impact on bet
-            let action = "";
+//         userInput = prompt(`Dealer hand is: ${obfuscatedDealerHand[0] + " " + obfuscatedDealerHand[1]}
+//                     Your hand is: ${playerHand}
+//                     What will you do?`);
+//         if (userInput == "hit") {
+//             playerHand = hit(playerHand, cardDeck);  
+//             continue;
+//         }
+//         else if (userInput == "surrender") {
+//             alert("You surrender!");
+//             cash = calculateNewCash(cash, bet, "surrender");
+//             break;
+//         }
+//         else if (userInput == "stand" || userInput == "double down") {
+//             // this section is used to determine the impact on bet
+//             let action = "";
 
-            if (userInput == "double down") {
-                action = "double ";
-                playerHand = hit(playerHand, cardDeck);
-            }
+//             if (userInput == "double down") {
+//                 action = "double ";
+//                 playerHand = hit(playerHand, cardDeck);
+//             }
 
-            dealerHand = playDealerTurn(dealerHand, getValue(dealerHand), cardDeck);
-            dealerValue = getValue(dealerHand);
+//             dealerHand = playDealerTurn(dealerHand, getValue(dealerHand), cardDeck);
+//             dealerValue = getValue(dealerHand);
             
-            if (dealerValue > 21) {
-                alert("Dealer's bust! you won!");
-                cash = calculateNewCash(cash, bet, action + "win");
-                break;
-            } else if (dealerValue == 21) {
-                alert("Blakcjack! Dealer won!");
-                cash = calculateNewCash(cash, bet, action + "lose");
-                break; 
-            } else {
-                if (chooseWinner(dealerValue, getValue(playerHand)) == "dealer") {
-                    alert("Dealer won! His hand is " + dealerHand);
-                    cash = calculateNewCash(cash, bet, action + "lose");
-                    break;
-                }
-                else {
-                    alert("You won! Dealer\'s hand is" + dealerHand);
-                    cash = calculateNewCash(cash, bet, action + "win");
-                    break;
-                }
-            }
+//             if (dealerValue > 21) {
+//                 alert("Dealer's bust! you won!");
+//                 cash = calculateNewCash(cash, bet, action + "win");
+//                 break;
+//             } else if (dealerValue == 21) {
+//                 alert("Blakcjack! Dealer won!");
+//                 cash = calculateNewCash(cash, bet, action + "lose");
+//                 break; 
+//             } else {
+//                 if (chooseWinner(dealerValue, getValue(playerHand)) == "dealer") {
+//                     alert("Dealer won! His hand is " + dealerHand);
+//                     cash = calculateNewCash(cash, bet, action + "lose");
+//                     break;
+//                 }
+//                 else {
+//                     alert("You won! Dealer\'s hand is" + dealerHand);
+//                     cash = calculateNewCash(cash, bet, action + "win");
+//                     break;
+//                 }
+//             }
             
-        }
-    }
-}
+//         }
+//     }
+// }
