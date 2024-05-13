@@ -11,6 +11,11 @@ let dealerValue;
 let obfuscatedDealerHand;
 let userInput;
 
+// bets
+let cash = 100;
+let bet = 1;
+let winnings = 0;
+
 // function to generate card deck based on arrays of suits and values
 function generateCardDeck(cardValue, cardSuit) {
     // total iterations needed
@@ -144,55 +149,120 @@ function stand(hand) {
     return hand;
 }
 
-
+// double down
+function doubleDown(hand, deck) {
+    hand = hit(hand, deck);
+    return hand;
+}
 
 // dealer "AI"
+// dealer's strategy is fixed, such are blackjack rules
 function playDealerTurn(dealerHand, dealerValue, deck) {
     if (dealerValue < 17) {
         const newHand = hit(dealerHand, deck);
         const newValue = getValue(newHand);
-        alert(dealerValue);
         return playDealerTurn(newHand, newValue, deck);
     } else {
         return stand(dealerHand);
     }
 }
 
-cardDeck = generateCardDeck(cardValue, cardSuit);
+// bets actions
+// from the perspective of player
+function calculateNewCash(cash, bet, action) {
+    if (action == "lose") {
+        cash -= bet;
+    } else if (action == "double lose") {
+        cash -= 2 * bet;
+    } else if (action == "win") {
+        cash += bet;
+    } else if (action == "double win") {
+        cash += 2 * bet;
+    } else if (action == "surrender") {
+        cash -= 1/2 * bet;
+    } else if (action == "blackjack") {
+        cash += 3/2 * bet;
+    }
 
-playerHand = dealCards(cardDeck);
-dealerHand = dealCards(cardDeck);
-obfuscatedDealerHand = hideDealerCard(dealerHand);
+    return Math.floor(cash);
+}
+
+
 
 // main cycle
 
-while (true) {
-    userInput = prompt(`Dealer hand is: ${obfuscatedDealerHand[0] + " " + obfuscatedDealerHand[1]}
-                Your hand is: ${playerHand}
-                What will you do?`);
+while (cash > 0) {
+    cardDeck = generateCardDeck(cardValue, cardSuit);
+    playerHand = dealCards(cardDeck);
+    dealerHand = dealCards(cardDeck);
+    obfuscatedDealerHand = hideDealerCard(dealerHand);
+
+    bet = parseInt(prompt(`Your cash is ${cash}, please enter current bet`));
     
-    if (userInput == "hit") {
-        playerHand = hit(playerHand, cardDeck);
+    if (getValue(playerHand) == 21) {
+        alert("Blackjack!");
+        cash = calculateNewCash(cash, currentBet, "blackjack");
         continue;
     }
-    else if (userInput == "stand") {
-        dealerHand = playDealerTurn(dealerHand, getValue(dealerHand), cardDeck);
-        dealerValue = getValue(dealerHand);
+
+    while (true) {
+        currentHandValue = getValue(playerHand);
         
-        if (dealerValue > 21) {
-            alert("Dealer's bust! you won!");
+        if (currentHandValue == 21) {
+            alert("You win!");
+            cash = calculateNewCash(cash, currentBet, "win");
             break;
-        } else if (dealerValue == 21) {
-            alert("Blakcjack! Dealer won!")
-            break; 
-        } else {
-            if (chooseWinner(dealerValue, getValue(playerHand)) == "dealer") {
-                alert("Dealer won! His hand is " + dealerHand)
-            }
-            else {
-                alert("You won! Dealer\'s hand is" + dealerHand)
-            }
+        } else if (currentHandValue > 21) {
+            alert("Bust!");
+            cash = calculateNewCash(cash, currentBet, "lose");
+            break;
         }
-        
+    
+        userInput = prompt(`Dealer hand is: ${obfuscatedDealerHand[0] + " " + obfuscatedDealerHand[1]}
+                    Your hand is: ${playerHand}
+                    What will you do?`);
+        if (userInput == "hit") {
+            playerHand = hit(playerHand, cardDeck);  
+            continue;
+        }
+        else if (userInput == "surrender") {
+            alert("You surrender!");
+            cash = calculateNewCash(cash, bet, "surrender");
+            break;
+        }
+        else if (userInput == "stand" || userInput == "double down") {
+            // this section is used to determine the impact on bet
+            let action = "";
+
+            if (userInput == "double down") {
+                action = "double ";
+                playerHand = hit(playerHand, cardDeck);
+            }
+
+            dealerHand = playDealerTurn(dealerHand, getValue(dealerHand), cardDeck);
+            dealerValue = getValue(dealerHand);
+            
+            if (dealerValue > 21) {
+                alert("Dealer's bust! you won!");
+                cash = calculateNewCash(cash, bet, action + "win");
+                break;
+            } else if (dealerValue == 21) {
+                alert("Blakcjack! Dealer won!");
+                cash = calculateNewCash(cash, bet, action + "lose");
+                break; 
+            } else {
+                if (chooseWinner(dealerValue, getValue(playerHand)) == "dealer") {
+                    alert("Dealer won! His hand is " + dealerHand);
+                    cash = calculateNewCash(cash, bet, action + "lose");
+                    break;
+                }
+                else {
+                    alert("You won! Dealer\'s hand is" + dealerHand);
+                    cash = calculateNewCash(cash, bet, action + "win");
+                    break;
+                }
+            }
+            
+        }
     }
 }
