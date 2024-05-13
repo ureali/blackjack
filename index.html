@@ -16,12 +16,13 @@
         <p>Cash: <span id="cashValue"></span></p>
         <form action="">
             <label for="betField">Bet</label>
-            <input name="betField" type="text" placeholder="Enter your bet..." required>
-            <button>Start</button>
-            <button disabled="disabled">Hit</button>
-            <button disabled="disabled">Stand</button>
-            <button disabled="disabled">Double Down</button>
-            <button disabled="disabled">Insurance</button>
+            <input id="betField" name="betField" type="text" placeholder="Enter your bet..." required>
+            <button id="start" type="button">Start</button>
+            <button id="hit" disabled="disabled" type="button">Hit</button>
+            <button id="stand" disabled="disabled" type="button">Stand</button>
+            <button id="double" disabled="disabled" type="button">Double Down</button>
+            <button id="surrender" disabled="disabled" type="button">Surrender</button>
+            <button id="insurance" disabled="disabled" type="button">Insurance</button>
         </form>
     </section>
 </body>
