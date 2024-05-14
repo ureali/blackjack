@@ -103,7 +103,7 @@ function chooseWinner(dealerValue, playerValue) {
 }
 
 // catch all end game function
-function getResults(action, playerHand, dealerHand, cardDeck, cash, bet) {
+async function getResults(action, playerHand, dealerHand, cash, bet, popupElement, popupTextElement) {
     // this section is used to determine the impact on bet
 
     if (action == "double") {
@@ -115,18 +115,18 @@ function getResults(action, playerHand, dealerHand, cardDeck, cash, bet) {
     dealerValue = getValue(dealerHand);
     
     if (dealerValue > 21) {
-        alert("Dealer's bust! you won!");
+        await showPopup("win", popupElement, popupTextElement);
         cash = calculateNewCash(cash, bet, action + "win");
     } else if (dealerValue == 21) {
-        alert("Blakcjack! Dealer won!");
+        await showPopup("lose", popupElement, popupTextElement);
         cash = calculateNewCash(cash, bet, action + "lose");
     } else {
         if (chooseWinner(dealerValue, getValue(playerHand)) == "dealer") {
-            alert("Dealer won! His hand is " + dealerHand);
+            await showPopup("lose", popupElement, popupTextElement);
             cash = calculateNewCash(cash, bet, action + "lose");
         }
         else {
-            alert("You won! Dealer\'s hand is" + dealerHand);
+            await showPopup("win", popupElement, popupTextElement);
             cash = calculateNewCash(cash, bet, action + "win");
         }
     }
@@ -134,7 +134,8 @@ function getResults(action, playerHand, dealerHand, cardDeck, cash, bet) {
     return cash;
 }
 
-function setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField) {
+async function setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement) {
+    console.log(cardDeck);
     cashField.innerText = cash;
     let obfuscatedDealerHand = hideDealerCard(dealerHand);
 
@@ -150,13 +151,15 @@ function setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandEleme
     }
     
     if (getValue(playerHand) == 21) {
-        alert("Blackjack!");
+        // reset table if player has blackjack
+        await showPopup("blackjack", popupElement, popupTextElement);
         cash = calculateNewCash(cash, bet, "blackjack");
         playerHand = dealCards(cardDeck);
         dealerHand = dealCards(cardDeck);
         resetTable(playerHandElement, dealerHandElement);
-        setUpTable(cardDeck, cash, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
+        setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement);
     } else if (dealerHand[1].split(" ")[0] === "Ace") {
+        // code to offer insurance
         let insuranceBet = Math.floor(bet / 2);
         let takeInsurance = confirm(`Dealer's face-up card is an Ace. Do you want to buy insurance for ${insuranceBet}?`);
 
@@ -170,15 +173,6 @@ function setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandEleme
             }
         }
     }
-        currentHandValue = getValue(playerHand);
-        
-    if (currentHandValue == 21) {
-            alert("You win!");
-            cash = calculateNewCash(cash, bet, "win");
-        } else if (currentHandValue > 21) {
-            alert("Bust!");
-            cash = calculateNewCash(cash, bet, "lose");
-        }
     
 }
 
@@ -190,6 +184,7 @@ function hit(hand, deck) {
     let card = deck[Math.floor(Math.random() * deck.length)];
     // add it to hand, take it from deck
     hand.push(card);
+    deck.splice(deck.indexOf(card), 1);
     return hand;
 }
 
@@ -202,6 +197,15 @@ function stand(hand) {
 function doubleDown(hand, deck) {
     hand = hit(hand, deck);
     return hand;
+}
+
+// check if player has busted 
+function checkForBust(hand) {
+    if (getValue(hand) > 21) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 // dealer "AI"
@@ -234,7 +238,7 @@ function calculateNewCash(cash, bet, action) {
     } else if (action == "insurance") {
         cash += 2 * bet;
     } 
-
+    
     return Math.floor(cash);
 }
 
@@ -249,6 +253,7 @@ function renderCard(card, parentElement) {
     if (card == "***") {
         cardFileName = "back.svg";
     } else {
+        console.log(card, parentElement);
         cardFileName = card.toLowerCase().split(" ");
 
         //that's only because the card pack I downloaded has 2 versions of face cards, I prefer 2nd one
@@ -273,7 +278,7 @@ function resetDealerHandRendering(dealerHandElement) {
 
 // render dealer hand
 function renderDealerHand(dealerHand, dealerHandElement) {
-    for (let card in dealerHand) {
+    for (let card of dealerHand) {
         renderCard(card, dealerHandElement);
     }
 }
@@ -284,13 +289,40 @@ function resetTable(playerHandElement, dealerHandElement) {
     dealerHandElement.innerHTML = "";
 }
 
-// reset game
+// render popup
+async function showPopup(action, popupElement, popupTextElement) {
+  popupElement.style.display = "block";
+  switch (action) {
+    case "win": 
+        popupTextElement.innerText = "You won!";
+        break;
+    case "lose":
+        popupTextElement.innerText = "You lost!";
+        break;
+    case "blackjack":
+        popupTextElement.innerText = "Blackjack!";
+        break;
+    case "bust":
+        popupTextElement.innerText = "Bust!";
+        break;
+  }
+
+  // stop the game execution until player closes the popup
+  return new Promise(function(resolve, reject) {
+  popupElement.onclick = function() {
+    popupElement.style.display = "none";
+    resolve();
+  }})
+}
+
 
 //main cycle
 window.onload= function() {
     let startButton = document.getElementById("start");
     let betField = document.getElementById("betField");
     let cashField = document.getElementById("cashValue");
+    let popupElement = document.getElementById("infoScreen");
+    let popupTextElement = document.getElementById("infoText");
 
     cashField.innerText = cash;
 
@@ -320,37 +352,48 @@ window.onload= function() {
 
         let bet = parseInt(betField.value);
 
-        setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
+        setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement);
          
         hitButton.onclick = function() {
-            playerHand = hit(playerHand, cardDeck);  
-            renderCard(playerHand.at(-1), playerHandElement);
+            // check for bust before dealing new card
+            if(checkForBust(playerHand)) {
+                showPopup("bust", popupElement, popupTextElement);
+                cash = calculateNewCash(cash, bet, "lose");
+                playerHand = dealCards(cardDeck);
+                dealerHand = dealCards(cardDeck);
+                resetTable(playerHandElement, dealerHandElement);
+                setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement);
+            } else {
+                playerHand = hit(playerHand, cardDeck);  
+                renderCard(playerHand.at(-1), playerHandElement);
+            }
         }
         surrenderButton.onclick = function() {
             alert("You surrender!");
             cash = calculateNewCash(cash, bet, "surrender");
         }
-        standButton.onclick = function() {
+        standButton.onclick = async function() {
             dealerHand = playDealerTurn(dealerHand, getValue(dealerHand), cardDeck);
-            cash = getResults("stand", playerHand, dealerHand, cardDeck, cash, bet);
             resetDealerHandRendering(dealerHandElement);
             renderDealerHand(dealerHand, dealerHandElement);
+            cash = await getResults("stand", playerHand, dealerHand, cash, bet, popupElement, popupTextElement);
             playerHand = dealCards(cardDeck);
             dealerHand = dealCards(cardDeck);
             resetTable(playerHandElement, dealerHandElement);
-            setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
+            setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement);
         }
-        doubleButton.onclick = function() {
+        doubleButton.onclick = async function() {
+            // same as stand basically
             playerHand = hit(playerHand, cardDeck);  
             renderCard(playerHand.at(-1), playerHandElement);
             dealerHand = playDealerTurn(dealerHand, getValue(dealerHand), cardDeck);
-            cash = getResults("double", playerHand, dealerHand, cardDeck, cash, bet);
             resetDealerHandRendering(dealerHandElement);
             renderDealerHand(dealerHand, dealerHandElement);
+            cash = await getResults("double", playerHand, dealerHand, cash, bet, popupElement, popupTextElement);
             playerHand = dealCards(cardDeck);
             dealerHand = dealCards(cardDeck);
             resetTable(playerHandElement, dealerHandElement);
-            setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField);
+            setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement);
         }
     }        
  }
