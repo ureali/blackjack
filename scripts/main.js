@@ -135,10 +135,13 @@ async function getResults(action, gameState, gameVisualElements) {
     let dealerValue = getValue(dealerHand);
     let playerValue = getValue(playerHand);
 
+    // if dealer's bust and the player is not
     if (dealerValue > 21 && playerValue <= 21) {
         await showPopup("win", gameVisualElements);
         cash = calculateNewCash(cash, bet, action + "win");
-    } else if (dealerValue == playerValue) {
+    }
+    // in case of push 
+    else if (dealerValue == playerValue) {
         await showPopup("tie", gameVisualElements);
         cash = calculateNewCash(cash, bet, "tie");
     } else {
@@ -412,7 +415,8 @@ window.onload = function () {
 
         let initialPlayerHand = dealCards(cardDeck);
         let initialDealerHand = dealCards(cardDeck);
-
+        
+        // object containing all the game info
         let gameState = {
             cardDeck: cardDeck,
             playerHand: initialPlayerHand,
@@ -421,6 +425,7 @@ window.onload = function () {
             cash: cash
         };
 
+        // object containing all the elements to be manipulated
         let gameVisualElements = {
             playerHandElement: playerHandElement,
             dealerHandElement: dealerHandElement,
