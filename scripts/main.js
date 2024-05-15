@@ -112,16 +112,17 @@ async function getResults(action, playerHand, dealerHand, cash, bet, popupElemen
         action = "";
     }
 
-    dealerValue = getValue(dealerHand);
+    let dealerValue = getValue(dealerHand);
+    let playerValue = getValue(playerHand);
     
-    if (dealerValue > 21) {
+    if (dealerValue > 21 && playerValue <= 21) {
         await showPopup("win", popupElement, popupTextElement);
         cash = calculateNewCash(cash, bet, action + "win");
-    } else if (dealerValue == 21) {
-        await showPopup("lose", popupElement, popupTextElement);
-        cash = calculateNewCash(cash, bet, action + "lose");
+    } else if (dealerValue == playerValue) {
+        await showPopup("tie", popupElement, popupTextElement);
+        cash = calculateNewCash(cash, bet, "tie");
     } else {
-        if (chooseWinner(dealerValue, getValue(playerHand)) == "dealer") {
+        if (chooseWinner(dealerValue, playerValue) == "dealer") {
             await showPopup("lose", popupElement, popupTextElement);
             cash = calculateNewCash(cash, bet, action + "lose");
         }
@@ -243,7 +244,10 @@ function calculateNewCash(cash, bet, action) {
         cash += 3/2 * bet;
     } else if (action == "insurance") {
         cash += 2 * bet;
-    } 
+    } else if (action == "tie") {
+        // the line doesn't do anything, added for clarity
+        cash = cash; 
+    }
     
     return Math.floor(cash);
 }
@@ -320,6 +324,9 @@ async function showPopup(action, popupElement, popupTextElement) {
     case "insurance lose": 
         popupTextElement.innerText = "Dealer does not have blackjack!";
         break;
+    case "tie":
+        popupTextElement.innerText = "Push!";
+        break;
   }
 
   // stop the game execution until player closes the popup
@@ -368,19 +375,18 @@ window.onload= function() {
 
         setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement, insuranceButton);
          
-        hitButton.onclick = function() {
-            // check for bust before dealing new card
-            if(checkForBust(playerHand)) {
-                showPopup("bust", popupElement, popupTextElement);
-                cash = calculateNewCash(cash, bet, "lose");
-                playerHand = dealCards(cardDeck);
-                dealerHand = dealCards(cardDeck);
-                resetTable(playerHandElement, dealerHandElement);
-                setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement, insuranceButton);
-            } else {
+        hitButton.onclick = async function() {
                 playerHand = hit(playerHand, cardDeck);  
                 renderCard(playerHand.at(-1), playerHandElement);
-            }
+                // check for bust before dealing new card
+                if(checkForBust(playerHand)) {
+                    await showPopup("bust", popupElement, popupTextElement);
+                    cash = calculateNewCash(cash, bet, "lose");
+                    playerHand = dealCards(cardDeck);
+                    dealerHand = dealCards(cardDeck);
+                    resetTable(playerHandElement, dealerHandElement);
+                    setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement, insuranceButton);
+                }
         }
         surrenderButton.onclick = function() {
             showPopup("surrender", popupElement, popupTextElement);
@@ -404,14 +410,23 @@ window.onload= function() {
             // same as stand basically
             playerHand = hit(playerHand, cardDeck);  
             renderCard(playerHand.at(-1), playerHandElement);
-            dealerHand = playDealerTurn(dealerHand, getValue(dealerHand), cardDeck);
-            resetDealerHandRendering(dealerHandElement);
-            renderDealerHand(dealerHand, dealerHandElement);
-            cash = await getResults("double", playerHand, dealerHand, cash, bet, popupElement, popupTextElement);
-            playerHand = dealCards(cardDeck);
-            dealerHand = dealCards(cardDeck);
-            resetTable(playerHandElement, dealerHandElement);
-            setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement, insuranceButton);
-        }
-    }        
+            if(checkForBust(playerHand)) {
+                await showPopup("bust", popupElement, popupTextElement);
+                cash = calculateNewCash(cash, bet, "lose");
+                playerHand = dealCards(cardDeck);
+                dealerHand = dealCards(cardDeck);
+                resetTable(playerHandElement, dealerHandElement);
+                setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement, insuranceButton);
+            } else {
+                dealerHand = playDealerTurn(dealerHand, getValue(dealerHand), cardDeck);
+                resetDealerHandRendering(dealerHandElement);
+                renderDealerHand(dealerHand, dealerHandElement);
+                cash = await getResults("double", playerHand, dealerHand, cash, bet, popupElement, popupTextElement);
+                playerHand = dealCards(cardDeck);
+                dealerHand = dealCards(cardDeck);
+                resetTable(playerHandElement, dealerHandElement);
+                setUpTable(cardDeck, cash, bet, playerHand, dealerHand, playerHandElement, dealerHandElement, betField, cashField, popupElement, popupTextElement, insuranceButton);
+            }
+        }  
+    }      
  }

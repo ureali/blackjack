@@ -18,3 +18,8 @@
     width: 100%;
     position: fixed;
 }
+
+img {
+  width: 112px;
+  height: 172px;
+}
