@@ -11,16 +11,12 @@
     <div id="infoScreen">
         <p id="infoText"></p>
       </div>
-    <section id="dealerCards"></section>
-    <section id="deck">
-        <img src="cards/back.svg" alt="card back">
+    <section id="cashUI">
+        <p>$<span id="cashValue"></span></p>
     </section>
-    <section id="playerCards"></section>
+    <section id="dealerCards"></section>
     <section id="playerUI">
-        <p>Cash: <span id="cashValue"></span></p>
         <form action="">
-            <label for="betField">Bet</label>
-            <input id="betField" name="betField" type="text" placeholder="Enter your bet..." value="10" required>
             <button id="start" type="button">Start</button>
             <button id="hit" disabled="disabled" type="button" autocomplete = "off">Hit</button>
             <button id="stand" disabled="disabled" type="button" autocomplete = "off">Stand</button>
@@ -29,5 +25,10 @@
             <button id="insurance" disabled="disabled" type="button" autocomplete = "off">Insurance</button>
         </form>
     </section>
+    <section id="playerCards"></section>
+    <form action="">
+        <label for="betField">Bet</label>
+        <input id="betField" name="betField" type="text" placeholder="Enter your bet..." value="10" required>
+    </form>
 </body>
 </html>

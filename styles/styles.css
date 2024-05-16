@@ -1,3 +1,9 @@
+body {
+  background-image: url("../img/background.jpg");
+  color: #f6f4f4;
+  font-size: 16px;
+}
+
 #infoScreen {
     display: none; 
     position: fixed; 

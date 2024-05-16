@@ -100,7 +100,7 @@ function getValue(hand) {
 
 // hide one dealer card
 function hideDealerCard(dealerHand) {
-    return ["***", dealerHand[1]];
+    return [dealerHand[0], "***"];
 }
 
 // choose winner based on who's closer to 21
@@ -226,7 +226,7 @@ async function setUpTable(gameState, gameVisualElements) {
         // reset table if player has blackjack
         await showPopup("blackjack", gameVisualElements);
         await wrapUpGame("blackjack", gameState, gameVisualElements);
-    } else if (dealerHand[1].split(" ")[0] === "Ace") {
+    } else if (dealerHand[0].split(" ")[0] === "Ace") {
         // code to offer insurance
         let insuranceBet = Math.floor(bet / 2);
         gameState.bet = insuranceBet;
