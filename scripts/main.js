@@ -1,6 +1,8 @@
 // declare arrays of values and suits (separately)
-let cardValue = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"];
-let cardSuit = ["Clubs", "Diamonds", "Hearts", "Spades"];
+const CARD_VALUES = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"];
+const CARD_SUITS = ["Clubs", "Diamonds", "Hearts", "Spades"];
+
+const DEALER_THRESHOLD = 17;
 
 let cash = 100;
 
@@ -8,10 +10,10 @@ let dealerValue;
 let obfuscatedDealerHand;
 
 // function to generate card deck based on arrays of suits and values
-function generateCardDeck(cardValue, cardSuit, numDecks) {
+function generateCardDeck(CARD_VALUES, CARD_SUITS, numDecks) {
     // total iterations needed
     // numDecks is necessary to implement card counting functionality
-    let totalCards = cardValue.length * cardSuit.length * numDecks;
+    let totalCards = CARD_VALUES.length * CARD_SUITS.length * numDecks;
 
     // separate counters for suit and value
     let suitCounter = 0;
@@ -21,19 +23,19 @@ function generateCardDeck(cardValue, cardSuit, numDecks) {
 
     for (i = 0; i < totalCards; i++) {
         // if suitCounter too big move on to the next deck
-        if (suitCounter > 3) {
+        if (suitCounter > CARD_SUITS.length - 1) {
             suitCounter = 0;
             valueCounter = 0;
             i--;
         }
         // push new card only if value of the card exists
-        else if (valueCounter < cardValue.length) {
-            cardDeck.push(cardValue[valueCounter] + " Of " + cardSuit[suitCounter]);
+        else if (valueCounter < CARD_VALUES.length) {
+            cardDeck.push(CARD_VALUES[valueCounter] + " Of " + CARD_SUITS[suitCounter]);
 
             valueCounter++;
         }
         // else move to the next suit
-        else if (suitCounter < 4) {
+        else if (suitCounter < CARD_SUITS.length) {
             suitCounter++;
             valueCounter = 0;
             i--;
@@ -56,14 +58,14 @@ function dealCards(cardDeck) {
 // get the total value of the player hand
 function getValue(hand) {
     let value = 0;
-    let cardValue;
+    let CARD_VALUES;
 
     for (i = 0; i < hand.length; i++) {
         // get card value (not the most effective way, but I prefer to keep it simple)
-        cardValue = hand[i].split(" ")[0];
+        CARD_VALUES = hand[i].split(" ")[0];
 
         // loooong switch that covers all the values
-        switch (cardValue) {
+        switch (CARD_VALUES) {
             case "Ace":
                 // standard blackjack rules for ace
                 if (value + 11 > 21) {
@@ -82,7 +84,7 @@ function getValue(hand) {
                 value += 10;
                 break;
             default:
-                value += parseInt(cardValue);
+                value += parseInt(CARD_VALUES);
                 break;
         }
     }
@@ -259,11 +261,11 @@ function checkForBust(hand) {
 
 // dealer "AI"
 // dealer's strategy is fixed, such are blackjack rules
-function playDealerTurn(dealerHand, dealerValue, deck) {
-    if (dealerValue < 17) {
+function playDealerTurn(dealerHand, dealerValue, deck, dealerThreshold) {
+    if (dealerValue < dealerThreshold) {
         const newHand = hit(dealerHand, deck);
         const newValue = getValue(newHand);
-        return playDealerTurn(newHand, newValue, deck);
+        return playDealerTurn(newHand, newValue, deck, dealerThreshold);
     } else {
         return stand(dealerHand);
     }
@@ -410,7 +412,7 @@ window.onload = function () {
         let dealerHandElement = document.getElementById("dealerCards");
         let playerHandElement = document.getElementById("playerCards");
 
-        let cardDeck = generateCardDeck(cardValue, cardSuit, 4);
+        let cardDeck = generateCardDeck(CARD_VALUES, CARD_SUITS, 4);
 
 
         let initialPlayerHand = dealCards(cardDeck);
@@ -422,7 +424,8 @@ window.onload = function () {
             playerHand: initialPlayerHand,
             dealerHand: initialDealerHand,
             bet: parseInt(betField.value),
-            cash: cash
+            cash: cash,
+            dealerThreshold: DEALER_THRESHOLD
         };
 
         // object containing all the elements to be manipulated
@@ -452,7 +455,7 @@ window.onload = function () {
             gameState = await wrapUpGame("surrender", gameState, gameVisualElements);
         }
         standButton.onclick = async function () {
-            gameState.dealerHand = playDealerTurn(gameState.dealerHand, getValue(gameState.dealerHand), gameState.cardDeck);
+            gameState.dealerHand = playDealerTurn(gameState.dealerHand, getValue(gameState.dealerHand), gameState.cardDeck, gameState.dealerThreshold);
             resetDealerHandRendering(gameVisualElements.dealerHandElement);
             renderDealerHand(gameState.dealerHand, gameVisualElements.dealerHandElement);
             gameState = await wrapUpGame("stand", gameState, gameVisualElements);
@@ -461,11 +464,12 @@ window.onload = function () {
             // same as stand basically
             gameState.playerHand = hit(gameState.playerHand, gameState.cardDeck);
             renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
+            // check for bust
             if (checkForBust(gameState.playerHand)) {
                 await showPopup("bust", gameVisualElements);
                 gameState = await wrapUpGame("lose", gameState, gameVisualElements);
             } else {
-                dealerHand = playDealerTurn(gameState.dealerHand, getValue(gameState.dealerHand), gameState.cardDeck);
+                dealerHand = playDealerTurn(gameState.dealerHand, getValue(gameState.dealerHand), gameState.cardDeck, gameState.dealerThreshold);
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
                 renderDealerHand(gameState.dealerHand, gameVisualElements.dealerHandElement);
                 gameState = await wrapUpGame("double", gameState, gameVisualElements);
