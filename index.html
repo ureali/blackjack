@@ -17,18 +17,22 @@
     <section id="dealerCards"></section>
     <section id="playerUI">
         <form action="">
-            <button id="start" type="button">Start</button>
-            <button id="hit" disabled="disabled" type="button" autocomplete = "off">Hit</button>
-            <button id="stand" disabled="disabled" type="button" autocomplete = "off">Stand</button>
-            <button id="double" disabled="disabled" type="button" autocomplete = "off">Double</button>
-            <button id="surrender" disabled="disabled" type="button" autocomplete = "off">Surrender</button>
-            <button id="insurance" disabled="disabled" type="button" autocomplete = "off">Insurance</button>
+            <fieldset>
+                <button id="start" type="button">Start</button>
+                <button id="hit" disabled="disabled" type="button" autocomplete = "off">Hit</button>
+                <button id="stand" disabled="disabled" type="button" autocomplete = "off">Stand</button>
+                <button id="double" disabled="disabled" type="button" autocomplete = "off">Double</button>
+                <button id="surrender" disabled="disabled" type="button" autocomplete = "off">Surrender</button>
+                <button id="insurance" disabled="disabled" type="button" autocomplete = "off">Insurance</button>
+            </fieldset>
         </form>
     </section>
     <section id="playerCards"></section>
     <form action="">
-        <label for="betField">Bet</label>
-        <input id="betField" name="betField" type="text" placeholder="Enter your bet..." value="10" required>
+        <fieldset id="betSet">
+            <label for="betField">Bet</label>
+            <input id="betField" name="betField" type="text" placeholder="Enter your bet..." value="10" required>
+        </fieldset>
     </form>
 </body>
 </html>
