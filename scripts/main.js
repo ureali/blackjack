@@ -325,6 +325,9 @@ function calculateNewCash(cash, bet, action) {
 // render cards
 function renderCard(card, parentElement) {
     let cardFileName;
+    const CARD_WIDTH = 112;
+    let cardsNum = parentElement.getElementsByClassName("playingCard").length + 1;
+    let parentElementWidth = cardsNum * CARD_WIDTH;
 
     // render back of the card if it's obfuscated
     if (card == "***") {
@@ -343,6 +346,15 @@ function renderCard(card, parentElement) {
 
     let cardImg = document.createElement("img");
     cardImg.src = `cards/${cardFileName}`;
+
+    // add class and zindex to cards
+    cardImg.className = "playingCard";
+    console.log(parentElement);
+    cardImg.style.zIndex = `${cardsNum}}`;
+    cardImg.style.left = `${cardsNum == 1 ? 20 : cardsNum * 50}px`;
+
+    // update parent element width
+    parentElement.style.width = `${parentElementWidth}px`;
 
     parentElement.appendChild(cardImg);
 }
