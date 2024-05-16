@@ -326,8 +326,14 @@ function calculateNewCash(cash, bet, action) {
 function renderCard(card, parentElement) {
     let cardFileName;
     const CARD_WIDTH = 112;
+    let initialCardOffset = 20;
+    let cardOffset = 50;
     let cardsNum = parentElement.getElementsByClassName("playingCard").length + 1;
-    let parentElementWidth = cardsNum * CARD_WIDTH;
+
+    // I don't have a #@)$?$0 clue how this formula works, but it works
+    let parentElementWidth = initialCardOffset + (cardsNum - 1) * cardOffset + CARD_WIDTH;
+    
+    console.log(cardsNum, parentElementWidth);
 
     // render back of the card if it's obfuscated
     if (card == "***") {
@@ -349,9 +355,14 @@ function renderCard(card, parentElement) {
 
     // add class and zindex to cards
     cardImg.className = "playingCard";
-    console.log(parentElement);
+
     cardImg.style.zIndex = `${cardsNum}}`;
-    cardImg.style.left = `${cardsNum == 1 ? 20 : cardsNum * 50}px`;
+
+    // check if there are cards before applying left
+    cardImg.style.left = `${cardsNum == 1 ? initialCardOffset : cardsNum * cardOffset}px`;
+
+    // randomly rotate the card
+    cardImg.style.transform = `rotate(${Math.floor(Math.random() / 12 * 100)}deg)`
 
     // update parent element width
     parentElement.style.width = `${parentElementWidth}px`;
