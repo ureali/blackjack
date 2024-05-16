@@ -50,7 +50,7 @@ fieldset {
 }
 
 body {
-  background-image: url("../img/background.jpg");
+  background-color: #35654d;
   color: #f6f4f4;
   font-size: 16px;
 }
@@ -60,8 +60,8 @@ body {
   padding: 0 2em;
   width: fit-content;
   margin: auto;
-  border-radius: 30%;
-  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 20%;
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 
@@ -91,6 +91,50 @@ button {
   border-radius: 50%;
   height: 70px;
   width: 70px;
+  border: none;
+  box-shadow: none;
+}
+
+button:disabled {
+  display: none;
+}
+
+#double {
+  background-image: url("../img/double_grayscale.png");
+  background-position: center;
+  background-size: cover;
+}
+
+#stand {
+  background-image: url("../img/stand_grayscale.png");
+  background-position: center;
+  background-size: cover;
+}
+
+#surrender {
+  background-image: url("../img/surrender_grayscale.png");
+  background-position: center;
+  background-size: cover;
+    
+}
+
+#hit {
+  background-image: url("../img/hit_grayscale.png");
+  background-position: center;
+  background-size: cover;
+    
+}
+
+#start {
+  background-image: url("../img/play_grayscale.png");
+  background-position: center;
+  background-size: cover;
+}
+
+#insurance {
+  background-image: url("../img/insurance_grayscale.png");
+  background-position: center;
+  background-size: cover;
 }
 
 #betSet {
