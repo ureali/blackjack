@@ -72,8 +72,6 @@ body {
   left: 50%;
   transform: translateX(-50%);
   height: 172px;
-  display: flex;
-  justify-content: center;
 }
 
 
@@ -102,6 +100,9 @@ button:disabled {
   display: none;
 }
 
+button:hover {
+  filter: brightness(150%);
+}
 #double {
   background-image: url("../img/double_grayscale.png");
   background-position: center;
