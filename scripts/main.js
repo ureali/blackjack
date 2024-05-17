@@ -188,6 +188,7 @@ async function wrapUpGame(action, gameState, gameVisualElements) {
 
     resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
     resetChips(gameVisualElements.chipStack);
+    
     gameState = await setUpTable(gameState, gameVisualElements);
 
     return gameState;
@@ -205,11 +206,17 @@ async function setUpTable(gameState, gameVisualElements) {
     let popupTextElement = gameVisualElements.popupTextElement;
     let insuranceButton = gameVisualElements.insuranceButton;
 
+    // disable the actions before setting the bet (to keep the game bug free)
+    await disableActionButtons(gameVisualElements);
+
     gameState = await placeBets(gameState, gameVisualElements);
     let cash = gameState.cash;
     let bet = gameState.bet;
 
+    // disable betting once the bet is determined
+    await disableBetting(gameState, gameVisualElements);
 
+    await enableActionButtons(gameVisualElements);
 
     updateCashField(cash, cashField);
     let obfuscatedDealerHand = hideDealerCard(dealerHand);
@@ -406,6 +413,42 @@ async function makeBettingAvailable(gameState, gameVisualElements) {
   });
 }
 
+async function disableBetting(gameState, gameVisualElements) {
+    let betField = gameVisualElements.betField;
+    let buttons = betField.children;
+
+    return new Promise((resolve, reject) => {
+        for(let button of buttons) {
+            button.disabled = true;
+    };
+    resolve();
+  });
+}
+
+// make the action buttons disabled or enable them
+async function enableActionButtons(gameVisualElements) {
+    let actionSet = gameVisualElements.actionSet;
+    let buttons = actionSet.children;
+
+    return new Promise((resolve, reject) => {
+        for(let button of buttons) {
+            button.disabled = false;
+    };
+    resolve();
+  });
+}
+
+async function disableActionButtons(gameVisualElements) {
+    let actionSet = gameVisualElements.actionSet;
+    let buttons = actionSet.children;
+
+    return new Promise((resolve, reject) => {
+        for(let button of buttons) {
+            button.disabled = true;
+    };
+    resolve();
+  });
+}
 // updates the cash field with new value
 function updateCashField(value, cashField) {
     cashField.innerText = value;
@@ -446,12 +489,11 @@ async function placeBets(gameState, gameVisualElements) {
 
     await makeBettingAvailable(gameState, gameVisualElements);
 
-    /*  MAJOR BUG
-        Multiple event listeners are created and attached
-        results in taking several chips with one click
+    /*  onlick is not the best solution 
+        but eventhandler breaks stuff hard
     */
     return new Promise(function(resolve, reject) {
-        betField.addEventListener("click", (event) => betHandler(event, resolve, gameState, gameVisualElements));
+        betField.onclick = (event) => betHandler(event, resolve, gameState, gameVisualElements);
     })
 }
 
@@ -530,6 +572,7 @@ window.onload = function () {
     updateCashField(cash, cashField);
 
     startButton.onclick = async function () {
+        let actionSet = document.getElementById("actionSet");
         let hitButton = document.getElementById("hit");
         let standButton = document.getElementById("stand");
         let doubleButton = document.getElementById("double");
@@ -579,7 +622,8 @@ window.onload = function () {
             popupElement: popupElement,
             popupTextElement: popupTextElement,
             insuranceButton: insuranceButton,
-            chipStack: chipStack
+            chipStack: chipStack,
+            actionSet: actionSet
         };
 
         gameState = await setUpTable(gameState, gameVisualElements);
