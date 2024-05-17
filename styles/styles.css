@@ -146,6 +146,56 @@ button:hover {
   margin: auto;
 }
 
+#chip1 {
+  background-image: url("../img/chips/chip_1.svg");
+  background-position: center;
+  background-size: cover;
+}
+#chip5 {
+  background-image: url("../img/chips/chip_5.svg");
+  background-position: center;
+  background-size: cover;
+}
+#chip25 {
+  background-image: url("../img/chips/chip_25.svg");
+  background-position: center;
+  background-size: cover;
+}
+#chip50 {
+  background-image: url("../img/chips/chip_50.svg");
+  background-position: center;
+  background-size: cover;
+}
+#chip100 {
+  background-image: url("../img/chips/chip_100.svg");
+  background-position: center;
+  background-size: cover;
+}
+#chip500 {
+  background-image: url("../img/chips/chip_500.svg");
+  background-position: center;
+  background-size: cover;
+}
+#chip1000 {
+  background-image: url("../img/chips/chip_1k.svg");
+  background-position: center;
+  background-size: cover;
+}
+
+#chipStack {
+  width: fit-content;
+  margin: auto;
+  padding: 70px;
+}
+
+.chips {
+  width: 70px;
+  height: 70px;
+  background-position: center;
+  background-size: cover;
+  display: inline-block;
+}
+
 #infoScreen {
     display: none; 
     position: fixed; 

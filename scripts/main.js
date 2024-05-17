@@ -118,8 +118,6 @@ async function getResults(action, gameState, gameVisualElements) {
     let dealerHand = gameState.dealerHand;
     let cash = gameState.cash;
 
-    // update bet
-    gameState.bet = parseInt(gameVisualElements.betField.value);
     let bet = gameState.bet;
 
     let popupElement = gameVisualElements.popupElement;
@@ -169,6 +167,7 @@ async function getResults(action, gameState, gameVisualElements) {
             cash = calculateNewCash(cash, bet, action + "win");
         }
     }
+    
 
     return cash;
 }
@@ -176,6 +175,7 @@ async function getResults(action, gameState, gameVisualElements) {
 // wrap up the game and reset table
 async function wrapUpGame(action, gameState, gameVisualElements) {
     gameState.cash = await getResults(action, gameState, gameVisualElements);
+    gameState.bet = 0;
 
     // check if it's time to reshuffle the cards
     if(gameState.cardDeck.length < gameState.cardDeckLength * gameState.reshuffleThreshold) {
@@ -187,7 +187,8 @@ async function wrapUpGame(action, gameState, gameVisualElements) {
     gameState.dealerHand = dealCards(gameState.cardDeck);
 
     resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
-    gameState = setUpTable(gameState, gameVisualElements);
+    resetChips(gameVisualElements.chipStack);
+    gameState = await setUpTable(gameState, gameVisualElements);
 
     return gameState;
 }
@@ -196,8 +197,6 @@ async function setUpTable(gameState, gameVisualElements) {
     let cardDeck = gameState.cardDeck;
     let playerHand = gameState.playerHand;
     let dealerHand = gameState.dealerHand;
-    let cash = gameState.cash;
-    let bet = gameState.bet;
     let playerHandElement = gameVisualElements.playerHandElement;
     let dealerHandElement = gameVisualElements.dealerHandElement;
     let betField = gameVisualElements.betField;
@@ -206,9 +205,13 @@ async function setUpTable(gameState, gameVisualElements) {
     let popupTextElement = gameVisualElements.popupTextElement;
     let insuranceButton = gameVisualElements.insuranceButton;
 
+    gameState = await placeBets(gameState, gameVisualElements);
+    let cash = gameState.cash;
+    let bet = gameState.bet;
 
 
-    cashField.innerText = cash;
+
+    updateCashField(cash, cashField);
     let obfuscatedDealerHand = hideDealerCard(dealerHand);
 
 
@@ -298,22 +301,22 @@ function playDealerTurn(dealerHand, dealerValue, deck, dealerThreshold) {
 // from the perspective of player
 function calculateNewCash(cash, bet, action) {
     if (action == "lose") {
-        cash -= bet;
-    } else if (action == "double lose") {
-        cash -= 2 * bet;
-    } else if (action == "win") {
-        cash += bet;
-    } else if (action == "double win") {
-        cash += 2 * bet;
-    } else if (action == "surrender") {
-        cash -= 1 / 2 * bet;
-    } else if (action == "blackjack") {
-        cash += 3 / 2 * bet;
-    } else if (action == "insurance") {
-        cash += 2 * bet;
-    } else if (action == "tie") {
         // the line doesn't do anything, added for clarity
         cash = cash;
+    } else if (action == "double lose") {
+        cash -= bet;
+    } else if (action == "win") {
+        cash += bet * 2;
+    } else if (action == "double win") {
+        cash += bet + bet * 2;
+    } else if (action == "surrender") {
+        cash += 1 / 2 * bet;
+    } else if (action == "blackjack") {
+        cash += bet + 3 / 2 * bet;
+    } else if (action == "insurance") {
+        cash += bet + 2 * bet;
+    } else if (action == "tie") {
+        cash += bet;
     }
 
     return Math.floor(cash);
@@ -332,8 +335,6 @@ function renderCard(card, parentElement) {
 
     // I don't have a #@)$?$0 clue how this formula works, but it works
     let parentElementWidth = initialCardOffset + (cardsNum - 1) * cardOffset + CARD_WIDTH;
-    
-    console.log(cardsNum, parentElementWidth);
 
     // render back of the card if it's obfuscated
     if (card == "***") {
@@ -370,6 +371,46 @@ function renderCard(card, parentElement) {
     parentElement.appendChild(cardImg);
 }
 
+// render playing chips
+function renderChip(chipValue, parentElement) {
+    let chip = document.createElement("div");
+
+    // add class to the chip
+    chip.className = "chips";
+    // add background image to chip
+    chip.style.backgroundImage = `url(img/chips/chip_${chipValue}.svg)`;
+
+    parentElement.appendChild(chip);
+}
+
+// this function checks what chips can the player bet and makes them available
+async function makeBettingAvailable(gameState, gameVisualElements) {
+    let currentCash = gameState.cash;
+    let betField = gameVisualElements.betField;
+    let chipButtons = betField.children;
+    let betButton = gameVisualElements.betButton;
+
+    // need to make sure all is rendered before proceeding
+    return new Promise((resolve, reject) => {
+        for(let button of chipButtons) {
+        let chipValue = button.dataset.chipValue;
+
+        if (chipValue <= currentCash || button == betButton) {
+            button.disabled = false;
+        } else {
+            button.disabled = true;
+        }
+        
+    };
+    resolve();
+  });
+}
+
+// updates the cash field with new value
+function updateCashField(value, cashField) {
+    cashField.innerText = value;
+}
+
 // reset only the dealer hand
 function resetDealerHandRendering(dealerHandElement) {
     dealerHandElement.innerHTML = "";
@@ -382,12 +423,52 @@ function renderDealerHand(dealerHand, dealerHandElement) {
     }
 }
 
+// reset chips 
+function resetChips(chipStack) {
+    chipStack.innerHTML = "";
+}
+
 // reset the table
 function resetTable(playerHandElement, dealerHandElement) {
     playerHandElement.innerHTML = "";
     dealerHandElement.innerHTML = "";
 }
 
+
+// function to place bet
+async function placeBets(gameState, gameVisualElements) {
+    let betField = gameVisualElements.betField;
+    let chipButtons = betField.children;
+    let betButton = gameVisualElements.betButton;
+    let chipStack = gameVisualElements.chipStack;
+
+    updateCashField(gameState.cash, gameVisualElements.cashField);
+
+    await makeBettingAvailable(gameState, gameVisualElements);
+
+    /*  MAJOR BUG
+        Multiple event listeners are created and attached
+        results in taking several chips with one click
+    */
+    return new Promise(function(resolve, reject) {
+        betField.addEventListener("click", (event) => betHandler(event, resolve, gameState, gameVisualElements));
+    })
+}
+
+async function betHandler(event, resolve, gameState, gameVisualElements) {
+    let target = event.target;
+    let chipValue = parseInt(target.dataset.chipValue);
+
+    if (target === gameVisualElements.betButton) {
+        resolve(gameState);
+    } else if (chipValue) {
+        renderChip(chipValue, chipStack);
+        await makeBettingAvailable(gameState, gameVisualElements);
+        gameState.bet += chipValue;
+        gameState.cash -= chipValue;
+        updateCashField(gameState.cash, gameVisualElements.cashField);
+    }
+}
 // render popup
 async function showPopup(action, gameVisualElements) {
     let popupElement = gameVisualElements.popupElement;
@@ -440,12 +521,13 @@ async function showPopup(action, gameVisualElements) {
 //main cycle
 window.onload = function () {
     let startButton = document.getElementById("start");
-    let betField = document.getElementById("betField");
+    let betField = document.getElementById("betSet");
     let cashField = document.getElementById("cashValue");
     let popupElement = document.getElementById("infoScreen");
     let popupTextElement = document.getElementById("infoText");
+    let chipStack = document.getElementById("chipStack");
 
-    cashField.innerText = cash;
+    updateCashField(cash, cashField);
 
     startButton.onclick = async function () {
         let hitButton = document.getElementById("hit");
@@ -453,6 +535,8 @@ window.onload = function () {
         let doubleButton = document.getElementById("double");
         let insuranceButton = document.getElementById("insurance");
         let surrenderButton = document.getElementById("surrender");
+
+        let betButton = document.getElementById("bet");
 
         hitButton.disabled = false;
         standButton.disabled = false;
@@ -476,7 +560,7 @@ window.onload = function () {
             cardDeckLength: cardDeck.length,
             playerHand: initialPlayerHand,
             dealerHand: initialDealerHand,
-            bet: parseInt(betField.value),
+            bet: 0,
             cash: cash,
             dealerThreshold: DEALER_THRESHOLD,
             reshuffleThreshold: RESHUFFLE_THRESHOLD,
@@ -490,10 +574,12 @@ window.onload = function () {
             playerHandElement: playerHandElement,
             dealerHandElement: dealerHandElement,
             betField: betField,
+            betButton: betButton,
             cashField: cashField,
             popupElement: popupElement,
             popupTextElement: popupTextElement,
-            insuranceButton: insuranceButton
+            insuranceButton: insuranceButton,
+            chipStack: chipStack
         };
 
         gameState = await setUpTable(gameState, gameVisualElements);
