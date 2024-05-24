@@ -1,6 +1,7 @@
 const express = require("express");
 const exphbs = require("express-handlebars");
 const path = require("path");
+const blackjackRoutes = require('./routes/blackjackRouter');
 
 const port = 3000;
 
@@ -15,11 +16,11 @@ app.engine('hbs', exphbs.engine(
 ));
 app.set('view engine', 'hbs');
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// temporary routing
-app.get("/play", (req, res) => {
-    res.render("play");
-});
+// routing stuff
+app.use("/play", blackjackRoutes);
 
 app.listen(port, () => console.log("working"));

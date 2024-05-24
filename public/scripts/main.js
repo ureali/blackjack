@@ -1,36 +1,9 @@
-
-// wrap up the game and reset table
-async function wrapUpGame(action, gameState, gameVisualElements) {
-    gameState.cash = await getResults(action, gameState, gameVisualElements);
-    gameState.bet = 0;
-
-    // check if it's time to reshuffle the cards
-    if(gameState.cardDeck.length < gameState.cardDeckLength * gameState.reshuffleThreshold) {
-        showPopup("reshuffle", gameVisualElements);
-        gameState.cardDeck = reshuffleCards(gameState.cardValues, gameState.cardSuits, gameState.deckNum);
-    }
-
-    gameState.playerHand = dealCards(gameState.cardDeck);
-    gameState.dealerHand = dealCards(gameState.cardDeck);
-
-    resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
-    resetChips(gameVisualElements.chipStack);
-    
-    gameState = await setUpTable(gameState, gameVisualElements);
-
-    return gameState;
-}
-
 async function setUpTable(gameState, gameVisualElements) {
-    let cardDeck = gameState.cardDeck;
     let playerHand = gameState.playerHand;
     let dealerHand = gameState.dealerHand;
     let playerHandElement = gameVisualElements.playerHandElement;
     let dealerHandElement = gameVisualElements.dealerHandElement;
-    let betField = gameVisualElements.betField;
     let cashField = gameVisualElements.cashField;
-    let popupElement = gameVisualElements.popupElement;
-    let popupTextElement = gameVisualElements.popupTextElement;
     let insuranceButton = gameVisualElements.insuranceButton;
 
     // disable the actions before setting the bet (to keep the game bug free)
@@ -46,7 +19,7 @@ async function setUpTable(gameState, gameVisualElements) {
     await enableActionButtons(gameVisualElements);
 
     updateCashField(cash, cashField);
-    let obfuscatedDealerHand = hideDealerCard(dealerHand);
+    let obfuscatedDealerHand = ["***", dealerHand[1]];
 
 
     // render the playing cards
@@ -59,28 +32,22 @@ async function setUpTable(gameState, gameVisualElements) {
         renderCard(playerHand[i], playerHandElement);
     }
 
-    if (getValue(playerHand) == 21) {
-        // reset table if player has blackjack
-        await showPopup("blackjack", gameVisualElements);
-        await wrapUpGame("blackjack", gameState, gameVisualElements);
-    } else if (dealerHand[0].split(" ")[0] === "Ace") {
+    if (gameState.insuranceAvailable) {
         // code to offer insurance
-        let insuranceBet = Math.floor(bet / 2);
-        gameState.bet = insuranceBet;
-
         insuranceButton.disabled = false;
 
         insuranceButton.onclick = async function () {
-            if (getValue(dealerHand) == 21) {
-                await showPopup("insurance win", gameVisualElements);
-                insuranceButton.disabled = true;
-                await wrapUpGame("insurance win", gameState, gameVisualElements)
-            } else {
-                showPopup("insurance lose", gameVisualElements);
-                insuranceButton.disabled = true;
-                cash = calculateNewCash(cash, insuranceBet, "lose");
-                gameState.cash = cash
-            }
+            const response = await fetch("/play/insurance", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                  },
+                body: JSON.stringify(gameState)
+            });
+
+            insuranceButton.disabled = true;
+
+            gameState = await response.json();
         }
     }
     return gameState;
@@ -333,8 +300,6 @@ window.onload = function () {
     let popupTextElement = document.getElementById("infoText");
     let chipStack = document.getElementById("chipStack");
 
-    updateCashField(cash, cashField);
-
     startButton.onclick = async function () {
         let actionSet = document.getElementById("actionSet");
         let hitButton = document.getElementById("hit");
@@ -355,26 +320,13 @@ window.onload = function () {
         let dealerHandElement = document.getElementById("dealerCards");
         let playerHandElement = document.getElementById("playerCards");
 
-        let cardDeck = generateCardDeck(CARD_VALUES, CARD_SUITS, 4);
-
-
-        let initialPlayerHand = dealCards(cardDeck);
-        let initialDealerHand = dealCards(cardDeck);
-        
         // object containing all the game info
-        let gameState = {
-            cardDeck: cardDeck,
-            cardDeckLength: cardDeck.length,
-            playerHand: initialPlayerHand,
-            dealerHand: initialDealerHand,
-            bet: 0,
-            cash: cash,
-            dealerThreshold: DEALER_THRESHOLD,
-            reshuffleThreshold: RESHUFFLE_THRESHOLD,
-            cardValues: CARD_VALUES,
-            cardSuits: CARD_SUITS,
-            deckNum: 4
-        };
+
+        const response = await fetch("/play/start");
+
+        gameState = await response.json();
+
+        updateCashField(gameState.cash, cashField);
 
         // object containing all the elements to be manipulated
         let gameVisualElements = {
@@ -390,45 +342,80 @@ window.onload = function () {
             actionSet: actionSet,
             startButton: startButton
         };
+        
 
-        gameState = await setUpTable(gameState, gameVisualElements);
+        setUpTable(gameState, gameVisualElements);
 
         hitButton.onclick = async function () {
-            gameState.playerHand = hit(gameState.playerHand, gameState.cardDeck);
+            const response = await fetch("/play/hit", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                  },
+                body: JSON.stringify(gameState)
+            });
+
+            gameState = await JSON.stringify(response);
+            
             renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
             // check for bust before dealing new card
-            if (checkForBust(gameState.playerHand)) {
+            if (gameState.message = "bust") {
                 await showPopup("bust", gameVisualElements);
-                gameState = await wrapUpGame("lose", gameState, gameVisualElements);
-            } else if (getValue(gameState.playerHand) == 21) {
+            } else if (gameState.message = "blackjack") {
                 // reset table if player has blackjack
                 await showPopup("blackjack", gameVisualElements);
-                await wrapUpGame("blackjack", gameState, gameVisualElements);
             }
         }
         surrenderButton.onclick = async function () {
-            showPopup("surrender", gameVisualElements);
-            gameState = await wrapUpGame("surrender", gameState, gameVisualElements);
+            const response = await fetch("/play/surrender", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                  },
+                body: JSON.stringify(gameState)
+            });
+
+            gameState = await response.json();
+
+            showPopup(gameState.message, gameVisualElements);
         }
         standButton.onclick = async function () {
-            gameState.dealerHand = playDealerTurn(gameState.dealerHand, getValue(gameState.dealerHand), gameState.cardDeck, gameState.dealerThreshold);
+            const response = await fetch("/play/stand", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                  },
+                body: JSON.stringify(gameState)
+            });
+
+            gameState = await response.json();
+            
             resetDealerHandRendering(gameVisualElements.dealerHandElement);
             renderDealerHand(gameState.dealerHand, gameVisualElements.dealerHandElement);
-            gameState = await wrapUpGame("stand", gameState, gameVisualElements);
+
+            showPopup(gameState.message, gameVisualElements);
         }
         doubleButton.onclick = async function () {
             // same as stand basically
-            gameState.playerHand = hit(gameState.playerHand, gameState.cardDeck);
+            const response = await fetch("/play/double", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                  },
+                body: JSON.stringify(gameState)
+            });
+
+            gameState = await response.json();
+
             renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
             // check for bust
-            if (checkForBust(gameState.playerHand)) {
+            if (gameState.message = "bust") {
                 await showPopup("bust", gameVisualElements);
-                gameState = await wrapUpGame("lose", gameState, gameVisualElements);
             } else {
-                gameState.dealerHand = playDealerTurn(gameState.dealerHand, getValue(gameState.dealerHand), gameState.cardDeck, gameState.dealerThreshold);
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
                 renderDealerHand(gameState.dealerHand, gameVisualElements.dealerHandElement);
-                gameState = await wrapUpGame("double", gameState, gameVisualElements);
+    
+                showPopup(gameState.message, gameVisualElements);
             }
         }
     }
