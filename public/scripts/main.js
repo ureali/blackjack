@@ -429,10 +429,16 @@ async function disableBetting(gameState, gameVisualElements) {
 async function enableActionButtons(gameVisualElements) {
     let actionSet = gameVisualElements.actionSet;
     let buttons = actionSet.children;
+    let startButton = gameVisualElements.startButton;
+    let insuranceButton = gameVisualElements.insuranceButton;
 
     return new Promise((resolve, reject) => {
         for(let button of buttons) {
-            button.disabled = false;
+            if (button == startButton || button == insuranceButton) {
+                button.disabled = true;
+            } else {
+                button.disabled = false;
+            }
     };
     resolve();
   });
@@ -623,7 +629,8 @@ window.onload = function () {
             popupTextElement: popupTextElement,
             insuranceButton: insuranceButton,
             chipStack: chipStack,
-            actionSet: actionSet
+            actionSet: actionSet,
+            startButton: startButton
         };
 
         gameState = await setUpTable(gameState, gameVisualElements);
