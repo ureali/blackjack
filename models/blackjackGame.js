@@ -9,7 +9,7 @@ class BlackjackGame {
     cardDeckLength;
     playerHand;
     dealerHand;
-    bet;
+    bet = 0;
     numDecks = 4;
     insuranceAvailable = false;
 
@@ -192,22 +192,22 @@ class BlackjackGame {
     // from the perspective of player
     calculateNewCash(cash, bet, action) {
         if (action == "lose") {
-            // the line doesn't do anything, added for clarity
-            cash = cash;
-        } else if (action == "double lose") {
             cash -= bet;
+        } else if (action == "double lose") {
+            cash -= bet*2;
         } else if (action == "win") {
-            cash += bet * 2;
-        } else if (action == "double win") {
-            cash += bet + bet * 2;
-        } else if (action == "surrender") {
-            cash += 1 / 2 * bet;
-        } else if (action == "blackjack") {
-            cash += bet + 3 / 2 * bet;
-        } else if (action == "insurance") {
-            cash += bet + 2 * bet;
-        } else if (action == "tie") {
             cash += bet;
+        } else if (action == "double win") {
+            cash += bet * 2;
+        } else if (action == "surrender") {
+            cash -= (1 / 2) * bet;
+        } else if (action == "blackjack") {
+            cash += (3 / 2) * bet;
+        } else if (action == "insurance") {
+            cash += 2 * bet;
+        } else if (action == "tie") {
+            // this line is useless I left it in for more clarity
+            cash = cash;
         }
 
         return Math.floor(cash);
@@ -307,6 +307,7 @@ class BlackjackGame {
             playerHand: this.playerHand,
             dealerHand: this.dealerHand,
             cash: this.cash,
+            bet: this.bet,
             insuranceAvailable: this.insuranceAvailable
         }
     }
