@@ -6,6 +6,7 @@ async function setUpTable(gameState, gameVisualElements) {
     let cashField = gameVisualElements.cashField;
     let insuranceButton = gameVisualElements.insuranceButton;
     let chipStack = gameVisualElements.chipStack;
+    console.log(gameState);
 
     // disable the actions before setting the bet (to keep the game bug free)
     await disableActionButtons(gameVisualElements);
@@ -67,7 +68,6 @@ function renderCard(card, parentElement) {
     let cardOffset = 50;
     let cardsNum = parentElement.getElementsByClassName("playingCard").length + 1;
 
-    // I don't have a #@)$?$0 clue how this formula works, but it works
     let parentElementWidth = initialCardOffset + (cardsNum - 1) * cardOffset + CARD_WIDTH;
 
     // render back of the card if it's obfuscated
@@ -91,7 +91,7 @@ function renderCard(card, parentElement) {
     // add class and zindex to cards
     cardImg.className = "playingCard";
 
-    cardImg.style.zIndex = `${cardsNum}}`;
+    cardImg.style.zIndex = `${cardsNum}`;
 
     // check if there are cards before applying left
     cardImg.style.left = `${cardsNum == 1 ? initialCardOffset : cardsNum * cardOffset}px`;
@@ -232,6 +232,27 @@ async function betHandler(event, resolve, gameState, gameVisualElements) {
     let chipValue = parseInt(target.dataset.chipValue);
 
     if (target === gameVisualElements.betButton) {
+        const response = await fetch("/play/continue", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+              },
+            body: JSON.stringify(gameState)
+        });
+
+        gameState = await response.json();
+
+        if (gameState.message === "blackjack") {
+            resetDealerHandRendering(gameVisualElements.dealerHandElement);
+            renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+
+            await showPopup(gameState.message, gameVisualElements);
+
+            // Reset the table
+            resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
+            await setUpTable(gameState, gameVisualElements);
+        }
+
         resolve(gameState);
     } else if (chipValue) {
         renderChip(chipValue, chipStack);
@@ -352,8 +373,7 @@ window.onload = function () {
         await setUpTable(gameState, gameVisualElements);
 
         hitButton.onclick = async function () {
-
-            let currentDealerHand = gameState.dealerHand;
+            hitButton.disabled = true;
 
             const response = await fetch("/play/hit", {
                 method: "POST",
@@ -364,32 +384,28 @@ window.onload = function () {
             });
 
             gameState = await response.json();
+
+            console.log("Updated gameState:", gameState);
             
 
             renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
             // check for bust before dealing new card
-            if (gameState.message == "bust") {
+            if (gameState.message === "bust" || gameState.message === "blackjack") {
+                // Reset and render dealer's hand
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(currentDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
     
-                await showPopup("bust", gameVisualElements);
-
+                // Show appropriate popup
+                await showPopup(gameState.message, gameVisualElements);
+    
+                // Reset the table
                 resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
                 await setUpTable(gameState, gameVisualElements);
-            } else if (gameState.message == "blackjack") {
-                // reset table if player has blackjack
-                resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(currentDealerHand, gameVisualElements.dealerHandElement);
-    
-                await showPopup("blackjack", gameVisualElements);
-                resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
-                await setUpTable(gameState, gameVisualElements);
-                
             }
+
+            hitButton.disabled = false;
         }
         surrenderButton.onclick = async function () {
-
-            let currentDealerHand = gameState.dealerHand;
 
             const response = await fetch("/play/surrender", {
                 method: "POST",
@@ -403,7 +419,7 @@ window.onload = function () {
 
 
             resetDealerHandRendering(gameVisualElements.dealerHandElement);
-            renderDealerHand(currentDealerHand, gameVisualElements.dealerHandElement);
+            renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
 
             await showPopup(gameState.message, gameVisualElements);
 
@@ -411,9 +427,6 @@ window.onload = function () {
             await setUpTable(gameState, gameVisualElements);
         }
         standButton.onclick = async function () {
-
-            let currentDealerHand = gameState.dealerHand;
-
             const response = await fetch("/play/stand", {
                 method: "POST",
                 headers: {
@@ -423,9 +436,9 @@ window.onload = function () {
             });
 
             gameState = await response.json();
-            
+
             resetDealerHandRendering(gameVisualElements.dealerHandElement);
-            renderDealerHand(currentDealerHand, gameVisualElements.dealerHandElement);
+            renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
 
             await showPopup(gameState.message, gameVisualElements);
 
@@ -435,8 +448,6 @@ window.onload = function () {
 
         doubleButton.onclick = async function () {
             // same as stand basically
-
-            let currentDealerHand = gameState.dealerHand;
 
             const response = await fetch("/play/double", {
                 method: "POST",
@@ -452,7 +463,7 @@ window.onload = function () {
             // check for bust
             if (gameState.message == "bust") {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(currentDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
     
                 await showPopup("bust", gameVisualElements);
 
@@ -460,7 +471,7 @@ window.onload = function () {
                 await setUpTable(gameState, gameVisualElements);
             } else {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(currentDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
     
                 await showPopup(gameState.message, gameVisualElements);
 

@@ -6,54 +6,80 @@ exports.startGame = (req, res) => {
 
     game.generateCardDeck();
     
-    game.dealerHand = game.dealCards(game.cardDeck);
-    game.playerHand = game.dealCards(game.cardDeck);
+    game.setUpGame();
 
     res.json(game.getGameState());
 }
 
-exports.hit = (req, res) => {
+exports.continue = (req, res) => {
+    game.bet = req.body.bet;
+
+    if (game.getValue(game.playerHand) == 21) {
+        // reset table if player has blackjack
+        game.setMessage("blackjack");
+        game.wrapUpGame("blackjack");
+
+        game.setUpGame();
+    }
+
+    res.json(game.getGameState());    
+}
+
+exports.hit = async (req, res) => {
     game.bet = req.body.bet;
 
     game.playerHand = game.hit(game.playerHand, game.cardDeck);
 
     if (game.checkForBust(game.playerHand)) {
         game.setMessage("bust");
-        game.wrapUpGame("lose");
+        await game.wrapUpGame("lose");
 
-        res.json(game.getGameState());
+
+        game.setUpGame();
+
+        await res.json(game.getGameState());
     } else if (game.getValue(game.playerHand) == 21) {
         // reset table if player has blackjack
         game.setMessage("blackjack");
-        game.wrapUpGame("blackjack");
+        await game.wrapUpGame("blackjack");
 
-        res.json(game.getGameState());
+
+        game.setUpGame();
+
+        await res.json(game.getGameState());
     } else {
+        game.setMessage("all ok");
         res.json(game.getGameState());
+        
     }
 
 }
 
-exports.surrender = (req, res) => {
+exports.surrender = async (req, res) => {
     game.bet = req.body.bet;
     
     game.setMessage("surrender");
     game.wrapUpGame("surrender");
 
-    res.json(game.getGameState());
+    game.setUpGame();
+
+    await res.json(game.getGameState()); 
 }
 
-exports.stand = (req, res) => {
+exports.stand = async (req, res) => {
     game.bet = req.body.bet;
     
     game.dealerHand = game.playDealerTurn();
 
     game.wrapUpGame("stand");
 
-    res.json(game.getGameState());
+
+    game.setUpGame();
+
+    await res.json(game.getGameState());
 }
 
-exports.double = (req, res) => {
+exports.double = async (req, res) => {
     game.bet = req.body.bet;
     
     game.playerHand = game.hit(game.playerHand, game.cardDeck);
@@ -62,13 +88,17 @@ exports.double = (req, res) => {
         game.setMessage("bust");
         game.wrapUpGame("lose");
 
-        res.json(game.getGameState());
+        game.setUpGame();
+
+        await res.json(game.getGameState());
     } else {
         game.dealerHand = game.playDealerTurn();
 
         game.wrapUpGame("double");
 
-        res.json(game.getGameState());
+        game.setUpGame();
+
+        await res.json(game.getGameState());
     }
 }
 

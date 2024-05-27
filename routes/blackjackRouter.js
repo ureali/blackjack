@@ -7,6 +7,7 @@ router.get("/", (req, res) => {
 });
 
 router.get("/start", blackjackController.startGame);
+router.post("/continue", blackjackController.continue);
 
 router.post("/hit", blackjackController.hit);
 router.post("/surrender", blackjackController.surrender);

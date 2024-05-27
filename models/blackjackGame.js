@@ -12,11 +12,14 @@ class BlackjackGame {
     bet = 0;
     numDecks = 4;
     insuranceAvailable = false;
+    displayDealerHand;
 
-    constructor(config) {
-        this.dealerThreshold = this.dealerThreshold;
-        this.reshuffleThreshold = this.reshuffleThreshold;
-        this.cash = this.cash;
+    constructor(config = {}) {
+        this.dealerThreshold = config.dealerThreshold || this.dealerThreshold;
+        this.reshuffleThreshold = config.reshuffleThreshold || this.reshuffleThreshold;
+        this.cash = config.cash || this.cash;
+        this.numDecks = config.numDecks || this.numDecks;
+
         this.cardDeck = this.cardDeck;
         this.cardDeckLength = this.cardDeckLength;
         this.playerHand = this.playerHand;
@@ -24,7 +27,6 @@ class BlackjackGame {
         this.bet = this.bet;
         this.cardValues = this.cardValues;
         this.cardSuits = this.cardSuits;
-        this.numDecks = this.numDecks;
     }
     // function to generate card deck based on arrays of suits and values
     generateCardDeck() {
@@ -113,11 +115,6 @@ class BlackjackGame {
         return value;
     }
 
-    // hide one dealer card
-    hideDealerCard(dealerHand) {
-        return [dealerHand[0], "***"];
-    }
-
     // choose winner based on who's closer to 21
     chooseWinner(dealerValue, playerValue) {
         if (21 - dealerValue < 21 - playerValue) {
@@ -153,7 +150,7 @@ class BlackjackGame {
     // code to offer insurance
     insurance(dealerHand) {
         let insuranceBet = Math.floor(this.bet / 2);
-        if (getValue(dealerHand) == 21) {
+        if (this.getValue(dealerHand) == 21) {
             this.setMessage("insurance win");
             this.wrapUpGame("insurance win");
         } else {
@@ -245,11 +242,15 @@ class BlackjackGame {
         if (dealerValue > 21 && playerValue <= 21) {
             this.setMessage("win");
             cash = this.calculateNewCash(cash, bet, action + "win");
+
+            return cash;
         }
         // in case of push 
         else if (dealerValue == playerValue) {
             this.setMessage("tie");
             cash = this.calculateNewCash(cash, bet, "tie");
+
+            return cash;
         } else {
             if (this.chooseWinner(dealerValue, playerValue) == "dealer") {
                 this.setMessage("lose");
@@ -259,16 +260,20 @@ class BlackjackGame {
                 this.setMessage("win");
                 cash = this.calculateNewCash(cash, bet, action + "win");
             }
+
+            return cash;
         }
         
-
-        return cash;
     }
 
     // wrap up the game and reset table
-    wrapUpGame(action) {
+    async wrapUpGame(action) {
         this.cash = this.getResults(action);
-        this.bet = 0;
+        this.bet = 0;   
+
+        // necessary to for front end to show the final dealer hand 
+        this.setDisplayDealerHand(this.dealerHand);
+
 
         // check if it's time to reshuffle the cards
         if(this.cardDeck.length < this.cardDeckLength * this.reshuffleThreshold) {
@@ -276,30 +281,26 @@ class BlackjackGame {
             this.cardDeck = this.reshuffleCards(this.cardValues, this.cardSuits, this.numDecks);
         }
 
-        this.playerHand = this.dealCards(this.cardDeck);
-        this.dealerHand = this.dealCards(this.cardDeck);
-        
-        this.setUpGame();
-
     }
 
     setUpGame() {
-        let cash = this.cash;
-        let bet = this.bet;
+        this.playerHand = this.dealCards(this.cardDeck);
+        this.dealerHand = this.dealCards(this.cardDeck);
 
-        if (this.getValue(this.playerHand) == 21) {
-            // reset table if player has blackjack
-            this.setMessage("blackjack");
-            this.wrapUpGame("blackjack");
-        } else if (this.dealerHand[0].split(" ")[0] === "Ace") {
+        if (this.dealerHand[0].split(" ")[0] === "Ace") {
                 this.insuranceAvailable = true;
-            }
+        }
 
     }
 
     setMessage(message) {
         this.message = message;
     }
+
+    setDisplayDealerHand(hand) {
+        this.displayDealerHand = hand;
+    }
+
 
     getGameState() {
         return {
@@ -308,7 +309,8 @@ class BlackjackGame {
             dealerHand: this.dealerHand,
             cash: this.cash,
             bet: this.bet,
-            insuranceAvailable: this.insuranceAvailable
+            insuranceAvailable: this.insuranceAvailable,
+            displayDealerHand: this.displayDealerHand,
         }
     }
 }
