@@ -155,8 +155,7 @@ class BlackjackGame {
             this.wrapUpGame("insurance win");
         } else {
             this.setMessage("insurance lose");
-            let cash = this.calculateNewCash(cash, insuranceBet, "lose");
-            this.cash = cash
+            this.cash = this.calculateNewCash(this.cash, insuranceBet, "lose");
         }
 
         this.insuranceAvailable = false;
@@ -287,7 +286,7 @@ class BlackjackGame {
         this.playerHand = this.dealCards(this.cardDeck);
         this.dealerHand = this.dealCards(this.cardDeck);
 
-        if (this.dealerHand[0].split(" ")[0] === "Ace") {
+        if (this.dealerHand[1].split(" ")[0] === "Ace") {
                 this.insuranceAvailable = true;
         }
 

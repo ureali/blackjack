@@ -6,7 +6,35 @@ async function setUpTable(gameState, gameVisualElements) {
     let cashField = gameVisualElements.cashField;
     let insuranceButton = gameVisualElements.insuranceButton;
     let chipStack = gameVisualElements.chipStack;
-    console.log(gameState);
+
+
+    // basically skip round if there is blackjack
+    if (gameState.message == "blackjack") {
+        await disableBetting(gameState, gameVisualElements);
+        await showPopup(gameState.message, gameVisualElements);
+
+        resetDealerHandRendering(gameVisualElements.dealerHandElement);
+        renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+
+        resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
+
+        // necessary to avoid infinite recursion (hacky, but hey, it works)
+        gameState.message = "all ok";
+
+        await setUpTable(gameState, gameVisualElements);
+
+        const response = await fetch("/play/continue", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+              },
+            body: JSON.stringify(gameState)
+        });
+
+        gameState = await response.json();
+
+        return gameState;
+    }
 
     // disable the actions before setting the bet (to keep the game bug free)
     await disableActionButtons(gameVisualElements);
@@ -48,9 +76,23 @@ async function setUpTable(gameState, gameVisualElements) {
                 body: JSON.stringify(gameState)
             });
 
-            insuranceButton.disabled = true;
-
             gameState = await response.json();
+
+            if (gameState.message == "insurance win") {
+                resetDealerHandRendering(gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+
+                updateCashField(gameState.cash, cashField);
+
+                await showPopup(gameState.message, gameVisualElements);
+
+                resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
+                await setUpTable(gameState, gameVisualElements);
+            } else {
+                await showPopup(gameState.message, gameVisualElements);
+            }
+
+            insuranceButton.disabled = true;
         }
     }
     return gameState;
@@ -242,15 +284,9 @@ async function betHandler(event, resolve, gameState, gameVisualElements) {
 
         gameState = await response.json();
 
+        // reset table if player has blackjack
         if (gameState.message === "blackjack") {
-            resetDealerHandRendering(gameVisualElements.dealerHandElement);
-            renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
-
-            await showPopup(gameState.message, gameVisualElements);
-
-            // Reset the table
-            resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
-            await setUpTable(gameState, gameVisualElements);
+            setUpTable(gameState, gameVisualElements);
         }
 
         resolve(gameState);
@@ -384,9 +420,6 @@ window.onload = function () {
             });
 
             gameState = await response.json();
-
-            console.log("Updated gameState:", gameState);
-            
 
             renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
             // check for bust before dealing new card

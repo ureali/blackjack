@@ -20,9 +20,13 @@ exports.continue = (req, res) => {
         game.wrapUpGame("blackjack");
 
         game.setUpGame();
-    }
 
-    res.json(game.getGameState());    
+        res.json(game.getGameState()); 
+    } else {
+        game.setMessage("all ok");
+        
+        res.json(game.getGameState());  
+    }  
 }
 
 exports.hit = async (req, res) => {
@@ -74,7 +78,19 @@ exports.stand = async (req, res) => {
     game.wrapUpGame("stand");
 
 
-    game.setUpGame();
+
+
+
+
+
+
+
+    // MUST REPLACE WITH PROPER FUNCTION
+    game.playerHand = ["Ace Of Spades", "Queen Of Diamonds"];
+
+
+
+
 
     await res.json(game.getGameState());
 }
@@ -106,6 +122,10 @@ exports.insurance = (req, res) => {
     game.bet = req.body.bet;
     
     game.insurance(game.dealerHand);
+
+    if (game.message == "insurance win") {
+        game.setUpGame();        
+    }
 
     res.json(game.getGameState());
 }
