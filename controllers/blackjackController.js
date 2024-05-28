@@ -1,5 +1,6 @@
 const Blackjack = require("../models/blackjackGame");
 
+// necessary to add methods to object back in case they go away due to session
 function reviveBlackjack(game) {
     if (game && typeof game === 'object') {
         Object.setPrototypeOf(game, Blackjack.prototype);
