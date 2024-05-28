@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/ureali/blackjack#readme",
   "dependencies": {
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "express-handlebars": "^7.1.2"
+    "express-handlebars": "^7.1.2",
+    "express-session": "^1.18.0"
   }
 }

@@ -23,15 +23,7 @@ async function setUpTable(gameState, gameVisualElements) {
 
         await setUpTable(gameState, gameVisualElements);
 
-        const response = await fetch("/play/continue", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-              },
-            body: JSON.stringify(gameState)
-        });
-
-        gameState = await response.json();
+        gameState = await fetchGameState("continue");
 
         return gameState;
     }
@@ -68,15 +60,7 @@ async function setUpTable(gameState, gameVisualElements) {
         insuranceButton.disabled = false;
 
         insuranceButton.onclick = async function () {
-            const response = await fetch("/play/insurance", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                  },
-                body: JSON.stringify(gameState)
-            });
-
-            gameState = await response.json();
+            gameState = await fetchGameState("insurance");
 
             if (gameState.message == "insurance win") {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
@@ -100,6 +84,28 @@ async function setUpTable(gameState, gameVisualElements) {
 
 }
 
+async function fetchGameState(action) {
+    try {
+        const response = await fetch(`/play/${action}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+              },
+            body: JSON.stringify(gameState)
+        });
+    
+        gameState = await response.json();
+
+        if (gameState.message === "ERROR_SESSION_TIMEOUT") {
+            throw new Error("The card game session has ended due to inactivity. Please refresh the page");
+        }
+    
+        return gameState;
+
+    } catch (error) {
+        alert(error);
+    }
+}
 
 // rendering
 
@@ -275,15 +281,7 @@ async function betHandler(event, resolve, gameState, gameVisualElements) {
     let chipValue = parseInt(target.dataset.chipValue);
 
     if (target === gameVisualElements.betButton) {
-        const response = await fetch("/play/continue", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-              },
-            body: JSON.stringify(gameState)
-        });
-
-        gameState = await response.json();
+        gameState = await fetchGameState("continue");
 
         // reset table if player has blackjack
         if (gameState.message === "blackjack") {
@@ -412,15 +410,7 @@ window.onload = function () {
         hitButton.onclick = async function () {
             hitButton.disabled = true;
 
-            const response = await fetch("/play/hit", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                  },
-                body: JSON.stringify(gameState)
-            });
-
-            gameState = await response.json();
+            gameState = await fetchGameState("hit");
 
             renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
             // check for bust before dealing new card
@@ -441,15 +431,7 @@ window.onload = function () {
         }
         surrenderButton.onclick = async function () {
 
-            const response = await fetch("/play/surrender", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                  },
-                body: JSON.stringify(gameState)
-            });
-
-            gameState = await response.json();
+            gameState = await fetchGameState("surrender");
 
 
             resetDealerHandRendering(gameVisualElements.dealerHandElement);
@@ -461,15 +443,7 @@ window.onload = function () {
             await setUpTable(gameState, gameVisualElements);
         }
         standButton.onclick = async function () {
-            const response = await fetch("/play/stand", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                  },
-                body: JSON.stringify(gameState)
-            });
-
-            gameState = await response.json();
+            gameState = await fetchGameState("stand");
 
             resetDealerHandRendering(gameVisualElements.dealerHandElement);
             renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
@@ -483,15 +457,7 @@ window.onload = function () {
         doubleButton.onclick = async function () {
             // same as stand basically
 
-            const response = await fetch("/play/double", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                  },
-                body: JSON.stringify(gameState)
-            });
-            
-            gameState = await response.json();
+            gameState = await fetchGameState("double");
 
             renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
             // check for bust

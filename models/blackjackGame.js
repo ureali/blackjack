@@ -305,7 +305,7 @@ class BlackjackGame {
         return {
             message: this.message,
             playerHand: this.playerHand,
-            dealerHand: this.dealerHand,
+            dealerHand: ["***", this.dealerHand[1]],
             cash: this.cash,
             bet: this.bet,
             insuranceAvailable: this.insuranceAvailable,
