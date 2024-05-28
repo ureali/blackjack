@@ -86,7 +86,8 @@ exports.stand = async (req, res) => {
 
 
     // MUST REPLACE WITH PROPER FUNCTION
-    game.playerHand = ["Ace Of Spades", "Queen Of Diamonds"];
+    game.dealerHand = ["6 Of Diamonds", "Ace Of Spades"];
+    game.insuranceAvailable = true;
 
 
 

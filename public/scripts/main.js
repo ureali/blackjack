@@ -89,6 +89,7 @@ async function setUpTable(gameState, gameVisualElements) {
                 resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
                 await setUpTable(gameState, gameVisualElements);
             } else {
+                updateCashField(gameState.cash, cashField);
                 await showPopup(gameState.message, gameVisualElements);
             }
 
