@@ -8,6 +8,16 @@ function reviveBlackjack(game) {
     return game;
 }
 
+// just to make sure folks don't send request with invalid bet
+function validateBet(bet, cash) {
+    // TODO: message to a client that the bet is invalid
+    if (bet > cash || typeof(bet) !== "number") {
+        return 1;
+    } else {
+        return bet;
+    }
+}
+
 exports.startGame = (req, res) => {
     try {
         let game = reviveBlackjack(req.session.game);
@@ -30,16 +40,21 @@ exports.continue = (req, res) => {
     try {
         let game = reviveBlackjack(req.session.game);
     
-        game.bet = req.body.bet;
+        game.bet = validateBet(req.body.bet, game.cash);
+        
+        // take bet from cash
+        game.cash -= game.bet;
     
         if (game.getValue(game.playerHand) == 21) {
             // reset table if player has blackjack
             game.setMessage("blackjack");
             game.wrapUpGame("blackjack");
+
+            let gameStateSnapshot = game.getGameState();
     
             game.setUpGame();
     
-            res.json(game.getGameState());
+            res.json(gameStateSnapshot);
         } else {
             game.setMessage("all ok");
     
@@ -55,7 +70,7 @@ exports.hit = async (req, res) => {
     try {
         let game = reviveBlackjack(req.session.game);
     
-        game.bet = req.body.bet;
+        game.bet = validateBet(req.body.bet, game.cash);
     
         game.playerHand = game.hit(game.playerHand, game.cardDeck);
     
@@ -92,7 +107,7 @@ exports.surrender = async (req, res) => {
     try {
         let game = reviveBlackjack(req.session.game);
     
-        game.bet = req.body.bet;
+        game.bet = validateBet(req.body.bet, game.cash);
     
         game.setMessage("surrender");
         game.wrapUpGame("surrender");
@@ -110,7 +125,7 @@ exports.stand = async (req, res) => {
     try {
         let game = reviveBlackjack(req.session.game);
     
-        game.bet = req.body.bet;
+        game.bet = validateBet(req.body.bet, game.cash);
     
         game.dealerHand = game.playDealerTurn();
     
@@ -129,25 +144,29 @@ exports.double = async (req, res) => {
     try {
         let game = reviveBlackjack(req.session.game);
     
-        game.bet = req.body.bet;
+        game.bet = validateBet(req.body.bet, game.cash);
     
         game.playerHand = game.hit(game.playerHand, game.cardDeck);
     
         if (game.checkForBust(game.playerHand)) {
-            game.setMessage("bust");
             game.wrapUpGame("double lose");
-    
+            game.setMessage("bust");
+            
+            let gameStateSnapshot = game.getGameState();
+
             game.setUpGame();
-    
-            await res.json(game.getGameState());
+
+            await res.json(gameStateSnapshot);
         } else {
             game.dealerHand = game.playDealerTurn();
     
             game.wrapUpGame("double");
-    
+
+            let gameStateSnapshot = game.getGameState();
+
             game.setUpGame();
-    
-            await res.json(game.getGameState());
+
+            await res.json(gameStateSnapshot);
         }
     } catch (error) {
         res.json({"message": "ERROR_SESSION_TIMEOUT"});
@@ -159,7 +178,7 @@ exports.insurance = (req, res) => {
     try {
         let game = reviveBlackjack(req.session.game);
     
-        game.bet = req.body.bet;
+        game.bet = validateBet(req.body.bet, game.cash);
     
         game.insurance(game.dealerHand);
     

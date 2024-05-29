@@ -188,22 +188,23 @@ class BlackjackGame {
     // from the perspective of player
     calculateNewCash(cash, bet, action) {
         if (action == "lose") {
-            cash -= bet;
-        } else if (action == "double lose") {
-            cash -= bet*2;
-        } else if (action == "win") {
-            cash += bet;
-        } else if (action == "double win") {
-            cash += bet * 2;
-        } else if (action == "surrender") {
-            cash -= (1 / 2) * bet;
-        } else if (action == "blackjack") {
-            cash += (3 / 2) * bet;
-        } else if (action == "insurance") {
-            cash += 2 * bet;
-        } else if (action == "tie") {
             // this line is useless I left it in for more clarity
             cash = cash;
+        } else if (action == "double lose") {
+            cash -= bet;
+        } else if (action == "win") {
+            cash += bet * 2;
+        } else if (action == "double win") {
+            cash += bet * 3;
+        } else if (action == "surrender") {
+            cash += bet - (1 / 2) * bet;
+        } else if (action == "blackjack") {
+            cash += bet + (3 / 2) * bet;
+        } else if (action == "insurance") {
+            cash += 3 * bet;
+        } else if (action == "tie") {
+            // this line is useless I left it in for more clarity
+            cash += bet;
         }
 
         return Math.floor(cash);
@@ -220,6 +221,9 @@ class BlackjackGame {
             action = "";
         } else if (action == "lose") {
             cash = this.calculateNewCash(cash, bet, "lose");
+            return cash;
+        } else if (action == "double lose") {
+            cash = this.calculateNewCash(cash, bet, "double lose");
             return cash;
         } else if (action == "surrender") {
             cash = this.calculateNewCash(cash, bet, "surrender");

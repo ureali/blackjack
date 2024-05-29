@@ -42,18 +42,6 @@ async function setUpTable(gameState, gameVisualElements) {
     await enableActionButtons(gameVisualElements);
 
     updateCashField(cash, cashField);
-    let obfuscatedDealerHand = ["***", dealerHand[1]];
-
-
-    // render the playing cards
-
-    for (let i = 0; i < 2; i++) {
-        renderCard(obfuscatedDealerHand[i], dealerHandElement);
-    }
-
-    for (let i = 0; i < 2; i++) {
-        renderCard(playerHand[i], playerHandElement);
-    }
 
     if (gameState.insuranceAvailable) {
         // code to offer insurance
@@ -248,6 +236,22 @@ function renderDealerHand(dealerHand, dealerHandElement) {
     }
 }
 
+// render initial hands 
+function renderHands(gameState, gameVisualElements) {
+    let obfuscatedDealerHand = ["***", gameState.dealerHand[1]];
+
+
+    // render the playing cards
+
+    for (let i = 0; i < 2; i++) {
+        renderCard(obfuscatedDealerHand[i], gameVisualElements.dealerHandElement);
+    }
+
+    for (let i = 0; i < 2; i++) {
+        renderCard(gameState.playerHand[i], gameVisualElements.playerHandElement);
+    }
+}
+
 // reset chips 
 function resetChips(chipStack) {
     chipStack.innerHTML = "";
@@ -288,10 +292,12 @@ async function betHandler(event, resolve, gameState, gameVisualElements) {
             setUpTable(gameState, gameVisualElements);
         }
 
+        renderHands(gameState, gameVisualElements);
+
         resolve(gameState);
     } else if (chipValue) {
         renderChip(chipValue, chipStack);
-        await makeBettingAvailable(gameState, gameVisualElements);
+
         gameState.bet += chipValue;
 
         /* 
@@ -299,6 +305,8 @@ async function betHandler(event, resolve, gameState, gameVisualElements) {
            serverside cash, because it's calculated AFTER fetching
         */
         gameState.cash -= chipValue;
+        
+        await makeBettingAvailable(gameState, gameVisualElements);
 
         updateCashField(gameState.cash, gameVisualElements.cashField);
     }
