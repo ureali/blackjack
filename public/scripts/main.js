@@ -91,7 +91,7 @@ async function fetchGameState(action) {
             headers: {
                 "Content-Type": "application/json",
               },
-            body: JSON.stringify(gameState)
+            body: JSON.stringify({bet: gameState.bet})
         });
     
         gameState = await response.json();
