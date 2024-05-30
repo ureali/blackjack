@@ -303,6 +303,7 @@ class BlackjackGame {
 
     setUpGame() {
         this.dealerHand = this.dealCards(this.cardDeck);
+        // this.dealerHand = ["King Of Spades", "Ace Of Spades"];
 
         if (this.splitTaken) { 
             this.playerHand = this.splitHand;
@@ -315,6 +316,9 @@ class BlackjackGame {
                 this.insuranceAvailable = true;
         } else if (this.playerHand[0].split(" ")[0] === this.playerHand[1].split(" ")[0]) {
                 this.splitAvailable = true;
+        } else {
+            this.insuranceAvailable = false;
+            this.splitAvailable = false;
         }
 
     }

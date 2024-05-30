@@ -152,18 +152,11 @@ exports.double = async (req, res) => {
             game.wrapUpGame("double lose");
             game.setMessage("bust");
             
-           // necessary for correct work of split
-            if (game.splitTaken) {
-                let gameStateSnapshot = game.getGameState();
-    
-                game.setUpGame();
-    
-                await res.json(gameStateSnapshot);
-            } else {
-                game.setUpGame();
-    
-                await res.json(game.getGameState());
-            }
+            let gameStateSnapshot = game.getGameState();
+
+            game.setUpGame();
+
+            await res.json(gameStateSnapshot);
         } else {
             game.dealerHand = game.playDealerTurn();
     

@@ -75,6 +75,8 @@ async function setUpTable(gameState, gameVisualElements) {
 
             insuranceButton.disabled = true;
         }
+    } else if (!insuranceButton.disabled && !gameState.insuranceAvailable) {
+        insuranceButton.disabled = true;
     }
     
     if (gameState.splitAvailable) {
