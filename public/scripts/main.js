@@ -44,6 +44,7 @@ async function setUpTable(gameState, gameVisualElements) {
     // reminder: cards render only when bet is done, so I have to circumvent it if it's disabled
     else {
         renderHands(gameState, gameVisualElements);
+        gameVisualElements.ignoreBetting = false;
     }
 
     await enableActionButtons(gameVisualElements);
@@ -86,6 +87,7 @@ async function setUpTable(gameState, gameVisualElements) {
             renderHands(gameState, gameVisualElements);
 
             gameVisualElements.ignoreBetting = true;
+            splitButton.disabled = true;
         }
     }
     return gameState;

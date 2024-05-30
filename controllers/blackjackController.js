@@ -152,12 +152,18 @@ exports.double = async (req, res) => {
             game.wrapUpGame("double lose");
             game.setMessage("bust");
             
-            // TODO: fix the split bug (split is lasting for three turns if busted while doubling)
-            let gameStateSnapshot = game.getGameState();
-
-            game.setUpGame();
-
-            await res.json(gameStateSnapshot);
+           // necessary for correct work of split
+            if (game.splitTaken) {
+                let gameStateSnapshot = game.getGameState();
+    
+                game.setUpGame();
+    
+                await res.json(gameStateSnapshot);
+            } else {
+                game.setUpGame();
+    
+                await res.json(game.getGameState());
+            }
         } else {
             game.dealerHand = game.playDealerTurn();
     
@@ -195,7 +201,7 @@ exports.insurance = (req, res) => {
 }
 
 exports.split = (req, res) => {
-//    / try {
+    try {
         let game = reviveBlackjack(req.session.game);
     
         game.bet = validateBet(req.body.bet, game.cash);
@@ -203,8 +209,8 @@ exports.split = (req, res) => {
         game.splitAction();
     
         res.json(game.getGameState());
-   // } catch (error) {
-    //    res.json({"message": "ERROR_SESSION_TIMEOUT"});
+   } catch (error) {
+       res.json({"message": "ERROR_SESSION_TIMEOUT"});
         
-   // }
+   }
 }
