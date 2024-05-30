@@ -12,6 +12,9 @@ class BlackjackGame {
     bet = 0;
     numDecks = 4;
     insuranceAvailable = false;
+    splitAvailable = false;
+    splitTaken = false;
+    splitHand = [];
     displayDealerHand;
 
     constructor(config = {}) {
@@ -162,6 +165,18 @@ class BlackjackGame {
     
     }   
 
+    // code for split
+    splitAction() {
+        let leftHand = [this.playerHand[0], this.cardDeck[Math.floor(Math.random() * this.cardDeck.length)]];
+        let rightHand = [this.playerHand[1], this.cardDeck[Math.floor(Math.random() * this.cardDeck.length)]];
+
+        this.playerHand = leftHand;
+        this.splitHand = rightHand;
+
+        this.splitAvailable = false;
+        this.splitTaken = true;
+    }
+
 
     // check if player has busted 
     checkForBust(hand) {
@@ -287,11 +302,19 @@ class BlackjackGame {
     }
 
     setUpGame() {
-        this.playerHand = this.dealCards(this.cardDeck);
         this.dealerHand = this.dealCards(this.cardDeck);
+
+        if (this.splitTaken) { 
+            this.playerHand = this.splitHand;
+            this.splitTaken = false;
+        } else {
+            this.playerHand = this.dealCards(this.cardDeck);
+        }
 
         if (this.dealerHand[1].split(" ")[0] === "Ace") {
                 this.insuranceAvailable = true;
+        } else if (this.playerHand[0].split(" ")[0] === this.playerHand[1].split(" ")[0]) {
+                this.splitAvailable = true;
         }
 
     }
@@ -313,6 +336,7 @@ class BlackjackGame {
             cash: this.cash,
             bet: this.bet,
             insuranceAvailable: this.insuranceAvailable,
+            splitAvailable: this.splitAvailable,
             displayDealerHand: this.displayDealerHand,
         }
     }

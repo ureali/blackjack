@@ -5,6 +5,7 @@ async function setUpTable(gameState, gameVisualElements) {
     let dealerHandElement = gameVisualElements.dealerHandElement;
     let cashField = gameVisualElements.cashField;
     let insuranceButton = gameVisualElements.insuranceButton;
+    let splitButton = gameVisualElements.splitButton;
     let chipStack = gameVisualElements.chipStack;
 
 
@@ -14,9 +15,9 @@ async function setUpTable(gameState, gameVisualElements) {
         await showPopup(gameState.message, gameVisualElements);
 
         resetDealerHandRendering(gameVisualElements.dealerHandElement);
-        renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+        renderDealerHand(gameState.displayDealerHand, dealerHandElement);
 
-        resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
+        resetTable(playerHandElement, dealerHandElement);
 
         // necessary to avoid infinite recursion (hacky, but hey, it works)
         gameState.message = "all ok";
@@ -31,17 +32,23 @@ async function setUpTable(gameState, gameVisualElements) {
     // disable the actions before setting the bet (to keep the game bug free)
     await disableActionButtons(gameVisualElements);
 
-    resetChips(chipStack);
-
-    gameState = await placeBets(gameState, gameVisualElements);
-    let cash = gameState.cash;
-
-    // disable betting once the bet is determined
-    await disableBetting(gameState, gameVisualElements);
+    if (!gameVisualElements.ignoreBetting) {
+        resetChips(chipStack);
+    
+        gameState = await placeBets(gameState, gameVisualElements);
+        let cash = gameState.cash;
+    
+        // disable betting once the bet is determined
+        await disableBetting(gameState, gameVisualElements);
+    } 
+    // reminder: cards render only when bet is done, so I have to circumvent it if it's disabled
+    else {
+        renderHands(gameState, gameVisualElements);
+    }
 
     await enableActionButtons(gameVisualElements);
 
-    updateCashField(cash, cashField);
+    updateCashField(gameState.cash, cashField);
 
     if (gameState.insuranceAvailable) {
         // code to offer insurance
@@ -66,6 +73,19 @@ async function setUpTable(gameState, gameVisualElements) {
             }
 
             insuranceButton.disabled = true;
+        }
+    }
+    
+    if (gameState.splitAvailable) {
+        splitButton.disabled = false;
+
+        splitButton.onclick = async function () {
+            gameState = await fetchGameState("split");
+
+            resetTable(playerHandElement, dealerHandElement);
+            renderHands(gameState, gameVisualElements);
+
+            gameVisualElements.ignoreBetting = true;
         }
     }
     return gameState;
@@ -195,10 +215,11 @@ async function enableActionButtons(gameVisualElements) {
     let buttons = actionSet.children;
     let startButton = gameVisualElements.startButton;
     let insuranceButton = gameVisualElements.insuranceButton;
+    let splitButton = gameVisualElements.splitButton; 
 
     return new Promise((resolve, reject) => {
         for(let button of buttons) {
-            if (button == startButton || button == insuranceButton) {
+            if (button == startButton || button == insuranceButton || button == splitButton) {
                 button.disabled = true;
             } else {
                 button.disabled = false;
@@ -364,6 +385,7 @@ async function showPopup(action, gameVisualElements) {
 window.onload = function () {
     let startButton = document.getElementById("start");
     let betField = document.getElementById("betSet");
+    let cashUI = document.getElementById("cashUI");
     let cashField = document.getElementById("cashValue");
     let popupElement = document.getElementById("infoScreen");
     let popupTextElement = document.getElementById("infoText");
@@ -375,6 +397,7 @@ window.onload = function () {
         let standButton = document.getElementById("stand");
         let doubleButton = document.getElementById("double");
         let insuranceButton = document.getElementById("insurance");
+        let splitButton = document.getElementById("split");
         let surrenderButton = document.getElementById("surrender");
 
         let betButton = document.getElementById("bet");
@@ -397,6 +420,9 @@ window.onload = function () {
 
         updateCashField(gameState.cash, cashField);
 
+        // loading cash only after receiving info from server
+        cashUI.style.visibility = "visible";
+
         // object containing all the elements to be manipulated
         let gameVisualElements = {
             playerHandElement: playerHandElement,
@@ -409,7 +435,9 @@ window.onload = function () {
             insuranceButton: insuranceButton,
             chipStack: chipStack,
             actionSet: actionSet,
-            startButton: startButton
+            startButton: startButton,
+            splitButton: splitButton,
+            ignoreBetting: false
         };
         
 
