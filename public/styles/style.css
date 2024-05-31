@@ -88,6 +88,17 @@ body {
   margin: auto;
 }
 
+
+.button-container {
+  display: inline-block;
+  text-align: center;
+}
+
+.button-container label {
+  display: block;
+  margin-top: 0.5em;
+}
+
 button {
   font-size: 12px;
   border-radius: 50%;
@@ -97,47 +108,48 @@ button {
   box-shadow: none;
 }
 
-button:disabled {
-  display: none;
-}
-
 button:hover {
   filter: brightness(150%);
 }
+
+button:disabled, button:disabled + label {
+  display: none;
+}
+
 #double {
-  background-image: url("../img/double_grayscale.png");
+  background-image: url("../img/double.png");
   background-position: center;
   background-size: cover;
 }
 
 #stand {
-  background-image: url("../img/stand_grayscale.png");
+  background-image: url("../img/stand.png");
   background-position: center;
   background-size: cover;
 }
 
 #surrender {
-  background-image: url("../img/surrender_grayscale.png");
+  background-image: url("../img/surrender.png");
   background-position: center;
   background-size: cover;
     
 }
 
 #hit {
-  background-image: url("../img/hit_grayscale.png");
+  background-image: url("../img/hit.png");
   background-position: center;
   background-size: cover;
     
 }
 
 #start {
-  background-image: url("../img/play_grayscale.png");
+  background-image: url("../img/play.png");
   background-position: center;
   background-size: cover;
 }
 
 #insurance {
-  background-image: url("../img/insurance_grayscale.png");
+  background-image: url("../img/insurance.png");
   background-position: center;
   background-size: cover;
 }

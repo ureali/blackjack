@@ -212,32 +212,32 @@ async function disableBetting(gameState, gameVisualElements) {
 
 // make the action buttons disabled or enable them
 async function enableActionButtons(gameVisualElements) {
-    let actionSet = gameVisualElements.actionSet;
-    let buttons = actionSet.children;
+    let actionSet = document.querySelectorAll(".button-container");
     let startButton = gameVisualElements.startButton;
     let insuranceButton = gameVisualElements.insuranceButton;
     let splitButton = gameVisualElements.splitButton; 
 
     return new Promise((resolve) => {
-        for(let button of buttons) {
+        Array.from(actionSet).forEach((div) => {
+            let button = div.querySelector("button");
             if (button == startButton || button == insuranceButton || button == splitButton) {
                 button.disabled = true;
             } else {
                 button.disabled = false;
             }
-    };
+    });
     resolve();
   });
 }
 
 async function disableActionButtons(gameVisualElements) {
     let actionSet = gameVisualElements.actionSet;
-    let buttons = actionSet.children;
 
     return new Promise((resolve) => {
-        for(let button of buttons) {
+        Array.from(actionSet).forEach((div) => {
+            let button = div.querySelector("button");
             button.disabled = true;
-    };
+    });
     resolve();
   });
 }
@@ -394,7 +394,7 @@ window.onload = function () {
     let chipStack = document.getElementById("chipStack");
 
     startButton.onclick = async function () {
-        let actionSet = document.getElementById("actionSet");
+        let actionSet = document.querySelectorAll(".button-container");
         let hitButton = document.getElementById("hit");
         let standButton = document.getElementById("stand");
         let doubleButton = document.getElementById("double");
@@ -403,11 +403,6 @@ window.onload = function () {
         let surrenderButton = document.getElementById("surrender");
 
         let betButton = document.getElementById("bet");
-
-        hitButton.disabled = false;
-        standButton.disabled = false;
-        doubleButton.disabled = false;
-        surrenderButton.disabled = false;
 
         startButton.disabled = true;
 
