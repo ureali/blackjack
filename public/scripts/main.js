@@ -1,6 +1,4 @@
 async function setUpTable(gameState, gameVisualElements) {
-    let playerHand = gameState.playerHand;
-    let dealerHand = gameState.dealerHand;
     let playerHandElement = gameVisualElements.playerHandElement;
     let dealerHandElement = gameVisualElements.dealerHandElement;
     let cashField = gameVisualElements.cashField;
@@ -24,7 +22,7 @@ async function setUpTable(gameState, gameVisualElements) {
 
         await setUpTable(gameState, gameVisualElements);
 
-        gameState = await fetchGameState("continue");
+        gameState = await fetchGameState("continue", gameState);
 
         return gameState;
     }
@@ -36,7 +34,6 @@ async function setUpTable(gameState, gameVisualElements) {
         resetChips(chipStack);
     
         gameState = await placeBets(gameState, gameVisualElements);
-        let cash = gameState.cash;
     
         // disable betting once the bet is determined
         await disableBetting(gameState, gameVisualElements);
@@ -56,7 +53,7 @@ async function setUpTable(gameState, gameVisualElements) {
         insuranceButton.disabled = false;
 
         insuranceButton.onclick = async function () {
-            gameState = await fetchGameState("insurance");
+            gameState = await fetchGameState("insurance", gameState);
 
             if (gameState.message == "insurance win") {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
@@ -83,7 +80,7 @@ async function setUpTable(gameState, gameVisualElements) {
         splitButton.disabled = false;
 
         splitButton.onclick = async function () {
-            gameState = await fetchGameState("split");
+            gameState = await fetchGameState("split", gameState);
 
             resetTable(playerHandElement, dealerHandElement);
             renderHands(gameState, gameVisualElements);
@@ -96,7 +93,7 @@ async function setUpTable(gameState, gameVisualElements) {
 
 }
 
-async function fetchGameState(action) {
+async function fetchGameState(action, gameState) {
     try {
         const response = await fetch(`/play/${action}`, {
             method: "POST",
@@ -186,7 +183,7 @@ async function makeBettingAvailable(gameState, gameVisualElements) {
     let betButton = gameVisualElements.betButton;
 
     // need to make sure all is rendered before proceeding
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         for(let button of chipButtons) {
         let chipValue = button.dataset.chipValue;
 
@@ -205,7 +202,7 @@ async function disableBetting(gameState, gameVisualElements) {
     let betField = gameVisualElements.betField;
     let buttons = betField.children;
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         for(let button of buttons) {
             button.disabled = true;
     };
@@ -221,7 +218,7 @@ async function enableActionButtons(gameVisualElements) {
     let insuranceButton = gameVisualElements.insuranceButton;
     let splitButton = gameVisualElements.splitButton; 
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         for(let button of buttons) {
             if (button == startButton || button == insuranceButton || button == splitButton) {
                 button.disabled = true;
@@ -237,7 +234,7 @@ async function disableActionButtons(gameVisualElements) {
     let actionSet = gameVisualElements.actionSet;
     let buttons = actionSet.children;
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         for(let button of buttons) {
             button.disabled = true;
     };
@@ -300,7 +297,7 @@ async function placeBets(gameState, gameVisualElements) {
     /*  onlick is not the best solution 
         but eventhandler breaks stuff hard
     */
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
         betField.onclick = (event) => betHandler(event, resolve, gameState, gameVisualElements);
     })
 }
@@ -308,9 +305,10 @@ async function placeBets(gameState, gameVisualElements) {
 async function betHandler(event, resolve, gameState, gameVisualElements) {
     let target = event.target;
     let chipValue = parseInt(target.dataset.chipValue);
+    let chipStack = gameVisualElements.chipStack;
 
     if (target === gameVisualElements.betButton) {
-        gameState = await fetchGameState("continue");
+        gameState = await fetchGameState("continue", gameState);
 
         // reset table if player has blackjack
         if (gameState.message === "blackjack") {
@@ -376,7 +374,7 @@ async function showPopup(action, gameVisualElements) {
     }
 
     // stop the game execution until player closes the popup
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
         popupElement.onclick = function () {
             popupElement.style.display = "none";
             resolve();
@@ -420,7 +418,7 @@ window.onload = function () {
 
         const response = await fetch("/play/start");
 
-        gameState = await response.json();
+        let gameState = await response.json();
 
         updateCashField(gameState.cash, cashField);
 
@@ -450,7 +448,7 @@ window.onload = function () {
         hitButton.onclick = async function () {
             hitButton.disabled = true;
 
-            gameState = await fetchGameState("hit");
+            gameState = await fetchGameState("hit", gameState);
 
             renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
             // check for bust before dealing new card
@@ -471,7 +469,7 @@ window.onload = function () {
         }
         surrenderButton.onclick = async function () {
 
-            gameState = await fetchGameState("surrender");
+            gameState = await fetchGameState("surrender", gameState);
 
 
             resetDealerHandRendering(gameVisualElements.dealerHandElement);
@@ -483,7 +481,7 @@ window.onload = function () {
             await setUpTable(gameState, gameVisualElements);
         }
         standButton.onclick = async function () {
-            gameState = await fetchGameState("stand");
+            gameState = await fetchGameState("stand", gameState);
 
             resetDealerHandRendering(gameVisualElements.dealerHandElement);
             renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
@@ -497,7 +495,7 @@ window.onload = function () {
         doubleButton.onclick = async function () {
             // same as stand basically
 
-            gameState = await fetchGameState("double");
+            gameState = await fetchGameState("double", gameState);
 
             renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
             // check for bust

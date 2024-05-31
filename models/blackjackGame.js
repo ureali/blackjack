@@ -22,14 +22,6 @@ class BlackjackGame {
         this.reshuffleThreshold = config.reshuffleThreshold || this.reshuffleThreshold;
         this.cash = config.cash || this.cash;
         this.numDecks = config.numDecks || this.numDecks;
-
-        this.cardDeck = this.cardDeck;
-        this.cardDeckLength = this.cardDeckLength;
-        this.playerHand = this.playerHand;
-        this.dealerHand = this.dealerHand;
-        this.bet = this.bet;
-        this.cardValues = this.cardValues;
-        this.cardSuits = this.cardSuits;
     }
     // function to generate card deck based on arrays of suits and values
     generateCardDeck() {
@@ -204,7 +196,7 @@ class BlackjackGame {
     calculateNewCash(cash, bet, action) {
         if (action == "lose") {
             // this line is useless I left it in for more clarity
-            cash = cash;
+            cash;
         } else if (action == "double lose") {
             cash -= bet;
         } else if (action == "win") {

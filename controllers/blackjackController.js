@@ -32,7 +32,8 @@ exports.startGame = (req, res) => {
     
         res.json(game.getGameState());
     } catch (error) {
-        res.json({"message": "ERROR_SESSION_TIMEOUT"});
+        // if the game property is undefined, that means session has timed out
+        if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
     }
 }
 
@@ -61,7 +62,7 @@ exports.continue = (req, res) => {
             res.json(game.getGameState());
         }
     } catch (error) {
-        res.json({"message": "ERROR_SESSION_TIMEOUT"});
+        if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
         
     }
 }
@@ -97,7 +98,7 @@ exports.hit = async (req, res) => {
     
         }
     } catch (error) {
-        res.json({"message": "ERROR_SESSION_TIMEOUT"});
+        if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
         
     }
 
@@ -116,7 +117,7 @@ exports.surrender = async (req, res) => {
     
         await res.json(game.getGameState());
     } catch (error) {
-        res.json({"message": "ERROR_SESSION_TIMEOUT"});
+        if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
         
     }
 }
@@ -135,7 +136,7 @@ exports.stand = async (req, res) => {
     
         await res.json(game.getGameState());
     } catch (error) {
-        res.json({"message": "ERROR_SESSION_TIMEOUT"});
+        if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
         
     }
 }
@@ -169,7 +170,7 @@ exports.double = async (req, res) => {
             await res.json(gameStateSnapshot);
         }
     } catch (error) {
-        res.json({"message": "ERROR_SESSION_TIMEOUT"});
+        if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
         
     }
 }
@@ -188,7 +189,7 @@ exports.insurance = (req, res) => {
     
         res.json(game.getGameState());
     } catch (error) {
-        res.json({"message": "ERROR_SESSION_TIMEOUT"});
+        if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
         
     }
 }
@@ -203,7 +204,7 @@ exports.split = (req, res) => {
     
         res.json(game.getGameState());
    } catch (error) {
-       res.json({"message": "ERROR_SESSION_TIMEOUT"});
+       if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
         
    }
 }
