@@ -154,9 +154,26 @@ button:disabled, button:disabled + label {
   background-size: cover;
 }
 
+#split {
+  background-image: url("../img/split.png");
+  background-position: center;
+  background-size: cover;
+}
+
 #betSet {
   width: fit-content;
   margin: auto;
+}
+
+#bet {
+  border-radius: 5%;
+  height: 35px;
+  margin-left: 5px;
+  background-color: #00e747;
+  color: white;
+  font-size: 1.5em;
+
+  vertical-align: middle;
 }
 
 #chip1 {
