@@ -15,6 +15,7 @@ class BlackjackGame {
     splitAvailable = false;
     splitTaken = false;
     splitHand = [];
+    splitMessage;
     displayDealerHand;
 
     constructor(config = {}) {
@@ -294,7 +295,6 @@ class BlackjackGame {
     }
 
     setUpGame() {
-        this.dealerHand = this.dealCards(this.cardDeck);
         // this.dealerHand = ["King Of Spades", "Ace Of Spades"];
 
         if (this.splitTaken) { 
@@ -302,6 +302,8 @@ class BlackjackGame {
             this.splitTaken = false;
         } else {
             this.playerHand = this.dealCards(this.cardDeck);
+            this.playerHand = ["Ace Of Spades", "Ace Of Spades"];
+            this.dealerHand = this.dealCards(this.cardDeck);
         }
 
         if (this.dealerHand[1].split(" ")[0] === "Ace") {
@@ -313,6 +315,20 @@ class BlackjackGame {
             this.splitAvailable = false;
         }
 
+    }
+
+    // this is to prevent bugs on game refresh 
+    resetGame() {
+        this.message = "all ok";
+        this.playerHand = [];
+        this.dealerHand = [];
+        this.bet = 0;
+        this.insuranceAvailable = false;
+        this.splitAvailable = false,
+        this.displayDealerHand = [];
+        this.splitHand = [];
+        this.splitTaken = false;
+        this.splitMessage =  "";
     }
 
     setMessage(message) {
@@ -334,6 +350,8 @@ class BlackjackGame {
             insuranceAvailable: this.insuranceAvailable,
             splitAvailable: this.splitAvailable,
             displayDealerHand: this.displayDealerHand,
+            splitHand: this.splitHand,
+            splitMessage: this.splitMessage
         }
     }
 }

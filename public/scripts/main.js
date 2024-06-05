@@ -4,7 +4,10 @@ async function setUpTable(gameState, gameVisualElements) {
     let cashField = gameVisualElements.cashField;
     let insuranceButton = gameVisualElements.insuranceButton;
     let splitButton = gameVisualElements.splitButton;
+    let splitCards = gameVisualElements.splitCards;
     let chipStack = gameVisualElements.chipStack;
+    let hitButton = gameVisualElements.hitButton;
+    let standButton = gameVisualElements.standButton;
 
 
     // basically skip round if there is blackjack
@@ -30,20 +33,12 @@ async function setUpTable(gameState, gameVisualElements) {
     // disable the actions before setting the bet (to keep the game bug free)
     await disableActionButtons(gameVisualElements);
 
-    if (!gameVisualElements.ignoreBetting) {
-        resetChips(chipStack);
-    
-        gameState = await placeBets(gameState, gameVisualElements);
-    
-        // disable betting once the bet is determined
-        await disableBetting(gameState, gameVisualElements);
-    } 
-    // reminder: cards render only when bet is done, so I have to circumvent it if it's disabled
-    else {
-        renderHands(gameState, gameVisualElements);
-        gameVisualElements.ignoreBetting = false;
-    }
+    resetChips(chipStack);
 
+    gameState = await placeBets(gameState, gameVisualElements);
+
+    // disable betting once the bet is determined
+    await disableBetting(gameState, gameVisualElements);
     await enableActionButtons(gameVisualElements);
 
     updateCashField(gameState.cash, cashField);
@@ -82,8 +77,18 @@ async function setUpTable(gameState, gameVisualElements) {
         splitButton.onclick = async function () {
             gameState = await fetchGameState("split", gameState);
 
+            // add border to indicate current hand
+            splitCards.style.display = "block";
+            splitCards.style.border = "3px red solid";
+
             resetTable(playerHandElement, dealerHandElement);
             renderHands(gameState, gameVisualElements);
+            renderPlayerHand(gameState.splitHand, splitCards)
+
+            disableActionButtons(gameVisualElements);
+
+            hitButton.disabled = false;
+            standButton.disabled = false;
 
             gameVisualElements.ignoreBetting = true;
             splitButton.disabled = true;
@@ -152,7 +157,7 @@ function renderCard(card, parentElement) {
     cardImg.style.zIndex = `${cardsNum}`;
 
     // check if there are cards before applying left
-    cardImg.style.left = `${cardsNum == 1 ? initialCardOffset : cardsNum * cardOffset}px`;
+    //cardImg.style.left = `${cardsNum == 1 ? initialCardOffset : cardsNum * cardOffset}px`;
 
     // randomly rotate the card
     cardImg.style.transform = `rotate(${Math.floor(Math.random() / 12 * 100)}deg)`
@@ -162,6 +167,7 @@ function renderCard(card, parentElement) {
 
     parentElement.appendChild(cardImg);
 }
+
 
 // render playing chips
 function renderChip(chipValue, parentElement) {
@@ -258,6 +264,13 @@ function renderDealerHand(dealerHand, dealerHandElement) {
     }
 }
 
+// render player hand
+function renderPlayerHand(playerHand, playerHandElement) {
+    for (let card of playerHand) {
+        renderCard(card, playerHandElement);
+    }
+}
+
 // render initial hands 
 function renderHands(gameState, gameVisualElements) {
     let obfuscatedDealerHand = ["***", gameState.dealerHand[1]];
@@ -265,13 +278,9 @@ function renderHands(gameState, gameVisualElements) {
 
     // render the playing cards
 
-    for (let i = 0; i < 2; i++) {
-        renderCard(obfuscatedDealerHand[i], gameVisualElements.dealerHandElement);
-    }
+    renderDealerHand(obfuscatedDealerHand, gameVisualElements.dealerHandElement);
 
-    for (let i = 0; i < 2; i++) {
-        renderCard(gameState.playerHand[i], gameVisualElements.playerHandElement);
-    }
+    renderPlayerHand(gameState.playerHand, gameVisualElements.playerHandElement);
 }
 
 // reset chips 
@@ -283,6 +292,15 @@ function resetChips(chipStack) {
 function resetTable(playerHandElement, dealerHandElement) {
     playerHandElement.innerHTML = "";
     dealerHandElement.innerHTML = "";
+
+    // this line is necessary in case of split
+    playerHandElement.style.border = "none";
+}
+
+// reset the split stack
+function resetSplitHand(splitHandElement) {
+    splitHandElement.innerHTML = "";
+    splitHandElement.style.display = "none";
 }
 
 
@@ -334,8 +352,9 @@ async function betHandler(event, resolve, gameState, gameVisualElements) {
         updateCashField(gameState.cash, gameVisualElements.cashField);
     }
 }
+
 // render popup
-async function showPopup(action, gameVisualElements) {
+async function showPopup(action, gameVisualElements, split=false) {
     let popupElement = gameVisualElements.popupElement;
     let popupTextElement = gameVisualElements.popupTextElement;
 
@@ -372,6 +391,11 @@ async function showPopup(action, gameVisualElements) {
             popupTextElement.innerText = "Error!";
             break;
     }
+    
+    // temporary solution, ideally the result should be highlighted visually, not with popup
+    if (split) {
+        popupTextElement.innerText += " (right hand)";
+    }
 
     // stop the game execution until player closes the popup
     return new Promise(function (resolve) {
@@ -400,6 +424,7 @@ window.onload = function () {
         let doubleButton = document.getElementById("double");
         let insuranceButton = document.getElementById("insurance");
         let splitButton = document.getElementById("split");
+        let splitCards = document.getElementById("splitCards");
         let surrenderButton = document.getElementById("surrender");
 
         let betButton = document.getElementById("bet");
@@ -433,7 +458,10 @@ window.onload = function () {
             chipStack: chipStack,
             actionSet: actionSet,
             startButton: startButton,
+            hitButton: hitButton,
+            standButton: standButton,
             splitButton: splitButton,
+            splitCards: splitCards,
             ignoreBetting: false
         };
         
@@ -441,26 +469,46 @@ window.onload = function () {
         await setUpTable(gameState, gameVisualElements);
 
         hitButton.onclick = async function () {
-            hitButton.disabled = true;
-
-            gameState = await fetchGameState("hit", gameState);
-
-            renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
-            // check for bust before dealing new card
-            if (gameState.message === "bust" || gameState.message === "blackjack") {
-                // Reset and render dealer's hand
-                resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+            if (!gameVisualElements.ignoreBetting) {
+                hitButton.disabled = true;
     
-                // Show appropriate popup
-                await showPopup(gameState.message, gameVisualElements);
+                gameState = await fetchGameState("hit", gameState);
     
-                // Reset the table
-                resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
-                await setUpTable(gameState, gameVisualElements);
+                renderCard(gameState.playerHand.at(-1), gameVisualElements.playerHandElement);
+                // check for bust before dealing new card
+                if (gameState.message === "bust" || gameState.message === "blackjack") {
+                    // Reset and render dealer's hand
+                    resetDealerHandRendering(gameVisualElements.dealerHandElement);
+                    renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+        
+                    // Show appropriate popup
+                    await showPopup(gameState.message, gameVisualElements);
+        
+                    // Reset the table
+                    resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
+
+                    // reset split cards separately (only hitting and standing is allowed while splitting)
+                    resetSplitHand(gameVisualElements.splitCards);
+
+                    await setUpTable(gameState, gameVisualElements);
+                }
+    
+                hitButton.disabled = false;
+            } else {
+                gameState = await fetchGameState("split-hit", gameState);
+
+                renderCard(gameState.playerHand.at(-1), gameVisualElements.splitCards);
+
+                if (gameState.message === "bust" || gameState.message === "blackjack") {
+                    // Show appropriate popup
+                    await showPopup(gameState.message, gameVisualElements);
+
+                    splitCards.style.border = "none";
+                        
+                    playerHandElement.style.border = "3px red solid";
+                    gameVisualElements.ignoreBetting = false;
+                }
             }
-
-            hitButton.disabled = false;
         }
         surrenderButton.onclick = async function () {
 
@@ -476,15 +524,33 @@ window.onload = function () {
             await setUpTable(gameState, gameVisualElements);
         }
         standButton.onclick = async function () {
-            gameState = await fetchGameState("stand", gameState);
+            if (!gameVisualElements.ignoreBetting) {
+                gameState = await fetchGameState("stand", gameState);
 
-            resetDealerHandRendering(gameVisualElements.dealerHandElement);
-            renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                resetDealerHandRendering(gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
 
-            await showPopup(gameState.message, gameVisualElements);
+                await showPopup(gameState.message, gameVisualElements);
+                
+                // show split message if there is one
+                if (gameState.splitMessage != "") {
+                    await showPopup(gameState.splitMessage, gameVisualElements, true);
+                }
 
-            resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
-            await setUpTable(gameState, gameVisualElements);
+                resetTable(gameVisualElements.playerHandElement, gameVisualElements.dealerHandElement);
+                
+                // reset split cards separately (only hitting and standing is allowed while splitting)
+                resetSplitHand(gameVisualElements.splitCards);
+
+                await setUpTable(gameState, gameVisualElements);
+            } else {
+                gameState = await fetchGameState("split-stand", gameState);
+
+                splitCards.style.border = "none";
+                        
+                playerHandElement.style.border = "3px red solid";
+                gameVisualElements.ignoreBetting = false;
+            }
         }
 
         doubleButton.onclick = async function () {

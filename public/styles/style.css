@@ -67,20 +67,28 @@ body {
 }
 
 
-#dealerCards, #playerCards {
-  position: relative;
+#dealerCards, #playerCardsContainer { 
   width: 0;
-  left: 50%;
-  transform: translateX(-50%);
   height: 172px;
+  margin: auto;
 }
 
+#playerCardsContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+}
+
+#splitCards {
+  display: none; 
+  margin-left: 50px;
+}
 
 .playingCard {
   width: 112px;
   height: 172px;
-  position: absolute;
-  top: 0;
+  margin-right: -50px;
 }
 
 #playerUI {
@@ -169,11 +177,10 @@ button:disabled, button:disabled + label {
   border-radius: 5%;
   height: 35px;
   margin-left: 5px;
+  vertical-align: middle;
   background-color: #00e747;
   color: white;
   font-size: 1.5em;
-
-  vertical-align: middle;
 }
 
 #chip1 {

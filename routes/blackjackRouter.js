@@ -15,6 +15,9 @@ router.post("/stand", blackjackController.stand);
 router.post("/double", blackjackController.double);
 
 router.post("/insurance", blackjackController.insurance);
+
 router.post("/split", blackjackController.split);
+router.post("/split-stand", blackjackController.splitStand);
+router.post("/split-hit", blackjackController.splitHit);
 
 module.exports = router;

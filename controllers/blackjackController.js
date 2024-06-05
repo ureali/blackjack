@@ -26,13 +26,14 @@ exports.startGame = (req, res) => {
             game = req.session.game = new Blackjack();
     
             game.generateCardDeck();
-    
-            game.setUpGame();
         }
+
+        game.resetGame();
+        game.setUpGame();
     
         res.json(game.getGameState());
     } catch (error) {
-        // if the game property is undefined, that means session has timed out
+        // if the game property is undefined, that means session has timed
         if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
     }
 }
@@ -45,6 +46,11 @@ exports.continue = (req, res) => {
         
         // take bet from cash
         game.cash -= game.bet;
+
+        // it's easier to reset split message here
+        if (game.splitMessage !== "") {
+            game.splitMessage = "";
+        }
     
         if (game.getValue(game.playerHand) == 21) {
             // reset table if player has blackjack
@@ -132,9 +138,12 @@ exports.stand = async (req, res) => {
     
         game.wrapUpGame("stand");
         
-        game.setUpGame();
+        if (!game.splitTaken) {
+            game.setUpGame();
+        }
     
         await res.json(game.getGameState());
+
     } catch (error) {
         if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
         
@@ -203,6 +212,68 @@ exports.split = (req, res) => {
         game.splitAction();
     
         res.json(game.getGameState());
+   } catch (error) {
+       if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
+        
+   }
+}
+
+exports.splitStand = (req, res) => {
+    try {
+        let game = reviveBlackjack(req.session.game);
+
+        // swap hands (split hand is kinda like a storage)
+        let tempVarToSwapHands = game.playerHand;
+
+        game.playerHand = game.splitHand;
+        game.splitHand = tempVarToSwapHands;
+
+        game.splitTaken = false;
+
+        game.dealerHand = game.playDealerTurn();
+
+        // EXTREMELY HACKY way to save the bet (remember, betting is disabled until split is done)
+        let tempBet = game.bet;
+
+        game.wrapUpGame("stand");
+
+        game.bet = tempBet;
+
+        game.splitMessage = game.message;
+
+        // swap back 
+        tempVarToSwapHands = game.playerHand;  
+        game.playerHand = game.splitHand;
+        game.splitHand = tempVarToSwapHands;
+        
+
+        res.json(game.getGameState());
+   } catch (error) {
+       if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
+        
+   }
+}
+
+exports.splitHit = async (req, res) => {
+    try {
+        let game = reviveBlackjack(req.session.game);
+    
+        game.bet = validateBet(req.body.bet, game.cash);
+    
+        game.playerHand = game.hit(game.playerHand, game.cardDeck);
+    
+        if (game.checkForBust(game.playerHand)) {
+            game.setMessage("bust");
+
+            game.cash -= game.bet;
+    
+            game.setUpGame();
+    
+            await res.json(game.getGameState());
+        } else {
+            game.setMessage("all ok");
+            await res.json(game.getGameState());
+        }
    } catch (error) {
        if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
         
