@@ -302,7 +302,6 @@ class BlackjackGame {
             this.splitTaken = false;
         } else {
             this.playerHand = this.dealCards(this.cardDeck);
-            this.playerHand = ["Ace Of Spades", "Ace Of Spades"];
             this.dealerHand = this.dealCards(this.cardDeck);
         }
 
