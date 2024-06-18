@@ -9,6 +9,16 @@ async function setUpTable(gameState, gameVisualElements) {
     let hitButton = gameVisualElements.hitButton;
     let standButton = gameVisualElements.standButton;
 
+    if (gameState.message == "reshuffle") {
+        await disableBetting(gameState, gameVisualElements);
+        await showPopup("reshuffle", gameVisualElements);
+        // Reset the table for the next round after reshuffling
+        resetTable(playerHandElement, dealerHandElement);
+        gameState.message = "all ok";
+        await setUpTable(gameState, gameVisualElements);
+        gameState = await fetchGameState("continue", gameState);
+        return gameState;
+    }
 
     // basically skip round if there is blackjack
     if (gameState.message == "blackjack") {

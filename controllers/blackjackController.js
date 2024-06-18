@@ -129,7 +129,7 @@ exports.surrender = async (req, res) => {
 }
 
 exports.stand = async (req, res) => {
-    try {
+    //try {
         let game = reviveBlackjack(req.session.game);
     
         game.bet = validateBet(req.body.bet, game.cash);
@@ -144,10 +144,10 @@ exports.stand = async (req, res) => {
     
         await res.json(game.getGameState());
 
-    } catch (error) {
-        if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
+  //  } catch (error) {
+    //    if(error.name == "TypeError") {res.json({"message": "ERROR_SESSION_TIMEOUT"})};
         
-    }
+    ///}
 }
 
 exports.double = async (req, res) => {
