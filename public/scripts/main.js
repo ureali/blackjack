@@ -200,7 +200,9 @@ async function makeBettingAvailable(gameState, gameVisualElements) {
 
     // need to make sure all is rendered before proceeding
     return new Promise((resolve) => {
-        for(let button of chipButtons) {
+        for(let container of chipButtons) {
+        let button = container.querySelector('button');
+
         let chipValue = button.dataset.chipValue;
 
         if (chipValue <= currentCash || button == betButton) {
@@ -219,7 +221,8 @@ async function disableBetting(gameState, gameVisualElements) {
     let buttons = betField.children;
 
     return new Promise((resolve) => {
-        for(let button of buttons) {
+        for(let container of buttons) {
+            let button = container.querySelector('button');
             button.disabled = true;
     };
     resolve();
@@ -232,11 +235,13 @@ async function enableActionButtons(gameVisualElements) {
     let startButton = gameVisualElements.startButton;
     let insuranceButton = gameVisualElements.insuranceButton;
     let splitButton = gameVisualElements.splitButton; 
+    let betButton = gameVisualElements.betButton;
 
     return new Promise((resolve) => {
         Array.from(actionSet).forEach((div) => {
             let button = div.querySelector("button");
-            if (button == startButton || button == insuranceButton || button == splitButton) {
+            console.log(button.id.slice(0, 5));
+            if (button == startButton || button == insuranceButton || button == splitButton || button == betButton || button.id.slice(0, 4) == "chip") {
                 button.disabled = true;
             } else {
                 button.disabled = false;
