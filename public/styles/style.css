@@ -1,3 +1,15 @@
+/* Table of contents:
+  1. normalization
+  2. body styles
+  3. cash ui styles
+  4. cards styles 
+  5. buttons/chips styles
+  6. popup styles
+*/
+
+
+/* 1. normalization */
+
 /*
   1. Use a more-intuitive box-sizing model.
 */
@@ -45,43 +57,29 @@ p, h1, h2, h3, h4, h5, h6 {
   isolation: isolate;
 }
 
-@keyframes move-chip {
-  to {
-    transform: translateY(-50px);
-  }
-}
-
-@keyframes move-chip-back {
-  from {
-    transform: translateY(-50px);
-  }
-  to {
-    transform: translateY(0px);
-  }
-}
-
 fieldset {
   border: none;
 }
 
+/* 2. body styles */
 body {
   background-color: #35654d;
   color: #f6f4f4;
   font-size: 16px;
 }
 
+/* 3. cash ui styles */
 #cashUI {
-
   font-size: 24px;
   padding: 10px 1em;
   width: fit-content;
-  margin: auto;
+  margin: 1em auto;
   border-radius: 50%;
   background-color: rgba(0, 0, 0, 0.7);
   margin-bottom: 3em;
 }
 
-
+/* 4. cards styles */
 #dealerCards, #playerCardsContainer { 
   width: 0;
   height: 172px;
@@ -106,11 +104,16 @@ body {
   margin-right: -50px;
 }
 
+/* 5. buttons/chips styles */
+
 #playerUI {
   width: fit-content;
   margin: auto;
 }
 
+#actionSet {
+  margin: 2em 0;
+}
 
 .button-container {
   display: inline-block;
@@ -132,21 +135,15 @@ button {
   height: 70px;
   width: 70px;
   border: none;
-  box-shadow: 2px 4px 3px;
+  box-shadow: 2px 4px 3px #000;
+}
+
+.button-container button{
+  transition: 0.3s ease-out;
 }
 
 .button-container:hover button {
-  animation-name: move-chip;
-  animation-duration: 500ms;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
-}
-
-.button-container:not(:hover) button {
-  animation-name: move-chip-back;
-  animation-duration: 500ms;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
+  transform: translateY(-15px);
 }
 
 button:disabled, button:disabled + label {
@@ -212,6 +209,10 @@ button:disabled, button:disabled + label {
   font-size: 1.5em;
 }
 
+#bet:hover {
+  transform: scale(1.1);
+}
+
 #chip1 {
   background-image: url("../img/chips/chip_1.svg");
   background-position: center;
@@ -260,8 +261,10 @@ button:disabled, button:disabled + label {
   background-position: center;
   background-size: cover;
   display: inline-block;
+  filter: drop-shadow(2px 4px 3px #000);
 }
 
+/* 6. popup styles */
 #infoScreen {
     display: none; 
     position: fixed; 
