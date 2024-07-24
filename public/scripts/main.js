@@ -545,7 +545,9 @@ window.onload = function () {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
                 renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
 
-                await showPopup(gameState.message, gameVisualElements);
+                if (gameState.message != "reshuffle") {
+                    await showPopup(gameState.message, gameVisualElements);
+                }
                 
                 // show split message if there is one
                 if (gameState.splitMessage != "") {
