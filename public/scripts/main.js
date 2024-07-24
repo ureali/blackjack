@@ -62,7 +62,7 @@ async function setUpTable(gameState, gameVisualElements) {
 
             if (gameState.message == "insurance win") {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
 
                 updateCashField(gameState.cash, cashField);
 
@@ -134,7 +134,7 @@ async function fetchGameState(action, gameState) {
 // rendering
 
 // render cards
-function renderCard(card, parentElement) {
+function renderCard(card, parentElement, isRevealDealerHand = false) {
     let cardFileName;
     const CARD_WIDTH = 112;
     let initialCardOffset = 20;
@@ -161,16 +161,20 @@ function renderCard(card, parentElement) {
     let cardImg = document.createElement("img");
     cardImg.src = `cards/${cardFileName}`;
 
-    // add class and zindex to cards
-    cardImg.className = "playingCard";
-
-    cardImg.style.zIndex = `${cardsNum}`;
-
     // check if there are cards before applying left
     //cardImg.style.left = `${cardsNum == 1 ? initialCardOffset : cardsNum * cardOffset}px`;
 
     // randomly rotate the card
-    cardImg.style.transform = `rotate(${Math.floor(Math.random() / 12 * 100)}deg)`
+    cardImg.style.setProperty('--end-rotation', `${Math.floor(Math.random() / 12 * 100)}deg`);
+
+    // add class and zindex to cards
+    cardImg.className = "playingCard";
+
+    if (isRevealDealerHand) {
+        cardImg.classList.add("noSlideIn"); // Add class to disable sliding
+    }
+
+    cardImg.style.zIndex = `${cardsNum}`;
 
     // update parent element width
     parentElement.style.width = `${parentElementWidth}px`;
@@ -273,9 +277,13 @@ function resetDealerHandRendering(dealerHandElement) {
 }
 
 // render dealer hand
-function renderDealerHand(dealerHand, dealerHandElement) {
+function renderDealerHand(dealerHand, dealerHandElement, isReveal = false) {
     for (let card of dealerHand) {
-        renderCard(card, dealerHandElement);
+        if (isReveal) {
+            renderCard(card, dealerHandElement, true);
+        } else {
+            renderCard(card, dealerHandElement);
+        }
     }
 }
 
@@ -494,7 +502,7 @@ window.onload = function () {
                 if (gameState.message === "bust" || gameState.message === "blackjack") {
                     // Reset and render dealer's hand
                     resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                    renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                    renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
         
                     // Show appropriate popup
                     await showPopup(gameState.message, gameVisualElements);
@@ -531,7 +539,7 @@ window.onload = function () {
 
 
             resetDealerHandRendering(gameVisualElements.dealerHandElement);
-            renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+            renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
 
             await showPopup(gameState.message, gameVisualElements);
 
@@ -543,7 +551,7 @@ window.onload = function () {
                 gameState = await fetchGameState("stand", gameState);
 
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
 
                 if (gameState.message != "reshuffle") {
                     await showPopup(gameState.message, gameVisualElements);
@@ -579,7 +587,7 @@ window.onload = function () {
             // check for bust
             if (gameState.message == "bust") {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
     
                 await showPopup("bust", gameVisualElements);
 
@@ -587,7 +595,7 @@ window.onload = function () {
                 await setUpTable(gameState, gameVisualElements);
             } else {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
     
                 await showPopup(gameState.message, gameVisualElements);
 
