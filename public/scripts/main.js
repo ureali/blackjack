@@ -138,7 +138,13 @@ function renderCard(card, parentElement, isRevealDealerHand = false) {
     let cardFileName;
     const CARD_WIDTH = 112;
     let initialCardOffset = 20;
-    let cardOffset = 50;
+    let cardOffset;
+
+    if(window.innerWidth <= 575){
+        cardOffset = 37;
+     } else {
+        cardOffset = 50;
+     }
     let cardsNum = parentElement.getElementsByClassName("playingCard").length + 1;
 
     let parentElementWidth = initialCardOffset + (cardsNum - 1) * cardOffset + CARD_WIDTH;
@@ -381,7 +387,7 @@ async function showPopup(action, gameVisualElements, split=false) {
     let popupElement = gameVisualElements.popupElement;
     let popupTextElement = gameVisualElements.popupTextElement;
 
-    popupElement.style.display = "block";
+    popupElement.style.display = "flex";
     switch (action) {
         case "win":
             popupTextElement.innerText = "You won!";

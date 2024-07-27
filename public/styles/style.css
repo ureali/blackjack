@@ -6,6 +6,7 @@
   4. cards styles 
   5. buttons/chips styles
   6. popup styles
+  7. media queries
 */
 
  /* 0. keyframe */
@@ -76,6 +77,10 @@ body {
   background-color: #35654d;
   color: #f6f4f4;
   font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
 }
 
 /* 3. cash ui styles */
@@ -92,7 +97,6 @@ body {
 /* 4. cards styles */
 #dealerCards, #playerCardsContainer { 
   width: 0;
-  height: 172px;
   margin: auto;
 }
 
@@ -284,6 +288,9 @@ button:disabled, button:disabled + label {
 #infoScreen {
     display: none; 
     position: fixed; 
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
     z-index: 1; 
     left: 0;
     top: 0;
@@ -296,11 +303,64 @@ button:disabled, button:disabled + label {
 
   #infoText {
     font-size: 10em;
-    margin-top: 20%; 
     text-align: center;
     width: 100%;
-    position: fixed;
 }
 
+/* 7. media queries */
 
+@media (max-width: 575px) {
+  body {
+    font-size: 15px;
+  }
 
+  #cashUI {
+    font-size: 22px;
+    padding: 8px 0.8em;
+  }
+
+  .playingCard {
+    width: 100px;
+    height: 160px;
+  }
+
+  button {
+    height: 50px;
+    width: 50px;
+    font-size: 11px;
+  }
+
+  #bet {
+    height: 30px;
+    font-size: 1.4em;
+  }
+
+  .chips {
+    width: 60px;
+    height: 60px;
+  }
+
+  #infoText {
+    font-size: 9em;
+  }
+
+  #dealerCards, #playerCardsContainer { 
+    height: 129px;
+  }
+
+  .playingCard {
+    width: 84px;
+    height: 129px;
+    animation: slideIn 1s ease-out;
+    margin-right: -37px;
+    transform: rotate(var(--end-rotation));
+  }
+  
+  .noSlideIn {
+    animation: none;
+  }
+  
+  #infoText {
+    font-size: 4em;
+  }
+}
