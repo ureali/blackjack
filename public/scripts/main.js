@@ -136,14 +136,16 @@ async function fetchGameState(action, gameState) {
 // render cards
 function renderCard(card, parentElement, isRevealDealerHand = false) {
     let cardFileName;
-    const CARD_WIDTH = 112;
+    let CARD_WIDTH;
     let initialCardOffset = 20;
     let cardOffset;
 
     if(window.innerWidth <= 575){
         cardOffset = 37;
+        CARD_WIDTH = 84;
      } else {
         cardOffset = 50;
+        CARD_WIDTH = 112;
      }
     let cardsNum = parentElement.getElementsByClassName("playingCard").length + 1;
 
