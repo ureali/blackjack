@@ -81,6 +81,7 @@ body {
   flex-direction: column;
   justify-content: space-between;
   min-height: 100vh;
+  max-height: 100vh;
 }
 
 /* 3. cash ui styles */
@@ -217,6 +218,9 @@ button:disabled, button:disabled + label {
 #betSet {
   width: fit-content;
   margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 #bet {
@@ -325,9 +329,10 @@ button:disabled, button:disabled + label {
   }
 
   button {
-    height: 50px;
-    width: 50px;
+    height: 45px;
+    width: 45px;
     font-size: 11px;
+    margin: 0 5px;
   }
 
   #bet {
@@ -336,8 +341,8 @@ button:disabled, button:disabled + label {
   }
 
   .chips {
-    width: 60px;
-    height: 60px;
+    width: 45px;
+    height: 45px;
   }
 
   #infoText {
@@ -355,7 +360,7 @@ button:disabled, button:disabled + label {
     margin-right: -37px;
     transform: rotate(var(--end-rotation));
   }
-  
+
   .noSlideIn {
     animation: none;
   }
