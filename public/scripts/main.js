@@ -9,6 +9,16 @@ async function setUpTable(gameState, gameVisualElements) {
     let hitButton = gameVisualElements.hitButton;
     let standButton = gameVisualElements.standButton;
 
+    if (gameState.message == "reshuffle") {
+        await disableBetting(gameState, gameVisualElements);
+        await showPopup("reshuffle", gameVisualElements);
+        // Reset the table for the next round after reshuffling
+        resetTable(playerHandElement, dealerHandElement);
+        gameState.message = "all ok";
+        await setUpTable(gameState, gameVisualElements);
+        gameState = await fetchGameState("continue", gameState);
+        return gameState;
+    }
 
     // basically skip round if there is blackjack
     if (gameState.message == "blackjack") {
@@ -52,7 +62,7 @@ async function setUpTable(gameState, gameVisualElements) {
 
             if (gameState.message == "insurance win") {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
 
                 updateCashField(gameState.cash, cashField);
 
@@ -124,11 +134,17 @@ async function fetchGameState(action, gameState) {
 // rendering
 
 // render cards
-function renderCard(card, parentElement) {
+function renderCard(card, parentElement, isRevealDealerHand = false) {
     let cardFileName;
     const CARD_WIDTH = 112;
     let initialCardOffset = 20;
-    let cardOffset = 50;
+    let cardOffset;
+
+    if(window.innerWidth <= 575){
+        cardOffset = 37;
+     } else {
+        cardOffset = 50;
+     }
     let cardsNum = parentElement.getElementsByClassName("playingCard").length + 1;
 
     let parentElementWidth = initialCardOffset + (cardsNum - 1) * cardOffset + CARD_WIDTH;
@@ -151,16 +167,20 @@ function renderCard(card, parentElement) {
     let cardImg = document.createElement("img");
     cardImg.src = `cards/${cardFileName}`;
 
-    // add class and zindex to cards
-    cardImg.className = "playingCard";
-
-    cardImg.style.zIndex = `${cardsNum}`;
-
     // check if there are cards before applying left
     //cardImg.style.left = `${cardsNum == 1 ? initialCardOffset : cardsNum * cardOffset}px`;
 
     // randomly rotate the card
-    cardImg.style.transform = `rotate(${Math.floor(Math.random() / 12 * 100)}deg)`
+    cardImg.style.setProperty('--end-rotation', `${Math.floor(Math.random() / 12 * 100)}deg`);
+
+    // add class and zindex to cards
+    cardImg.className = "playingCard";
+
+    if (isRevealDealerHand) {
+        cardImg.classList.add("noSlideIn"); // Add class to disable sliding
+    }
+
+    cardImg.style.zIndex = `${cardsNum}`;
 
     // update parent element width
     parentElement.style.width = `${parentElementWidth}px`;
@@ -190,7 +210,9 @@ async function makeBettingAvailable(gameState, gameVisualElements) {
 
     // need to make sure all is rendered before proceeding
     return new Promise((resolve) => {
-        for(let button of chipButtons) {
+        for(let container of chipButtons) {
+        let button = container.querySelector('button');
+
         let chipValue = button.dataset.chipValue;
 
         if (chipValue <= currentCash || button == betButton) {
@@ -209,7 +231,8 @@ async function disableBetting(gameState, gameVisualElements) {
     let buttons = betField.children;
 
     return new Promise((resolve) => {
-        for(let button of buttons) {
+        for(let container of buttons) {
+            let button = container.querySelector('button');
             button.disabled = true;
     };
     resolve();
@@ -222,11 +245,13 @@ async function enableActionButtons(gameVisualElements) {
     let startButton = gameVisualElements.startButton;
     let insuranceButton = gameVisualElements.insuranceButton;
     let splitButton = gameVisualElements.splitButton; 
+    let betButton = gameVisualElements.betButton;
 
     return new Promise((resolve) => {
         Array.from(actionSet).forEach((div) => {
             let button = div.querySelector("button");
-            if (button == startButton || button == insuranceButton || button == splitButton) {
+            console.log(button.id.slice(0, 5));
+            if (button == startButton || button == insuranceButton || button == splitButton || button == betButton || button.id.slice(0, 4) == "chip") {
                 button.disabled = true;
             } else {
                 button.disabled = false;
@@ -258,9 +283,13 @@ function resetDealerHandRendering(dealerHandElement) {
 }
 
 // render dealer hand
-function renderDealerHand(dealerHand, dealerHandElement) {
+function renderDealerHand(dealerHand, dealerHandElement, isReveal = false) {
     for (let card of dealerHand) {
-        renderCard(card, dealerHandElement);
+        if (isReveal) {
+            renderCard(card, dealerHandElement, true);
+        } else {
+            renderCard(card, dealerHandElement);
+        }
     }
 }
 
@@ -358,7 +387,7 @@ async function showPopup(action, gameVisualElements, split=false) {
     let popupElement = gameVisualElements.popupElement;
     let popupTextElement = gameVisualElements.popupTextElement;
 
-    popupElement.style.display = "block";
+    popupElement.style.display = "flex";
     switch (action) {
         case "win":
             popupTextElement.innerText = "You won!";
@@ -479,7 +508,7 @@ window.onload = function () {
                 if (gameState.message === "bust" || gameState.message === "blackjack") {
                     // Reset and render dealer's hand
                     resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                    renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                    renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
         
                     // Show appropriate popup
                     await showPopup(gameState.message, gameVisualElements);
@@ -516,7 +545,7 @@ window.onload = function () {
 
 
             resetDealerHandRendering(gameVisualElements.dealerHandElement);
-            renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+            renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
 
             await showPopup(gameState.message, gameVisualElements);
 
@@ -528,9 +557,11 @@ window.onload = function () {
                 gameState = await fetchGameState("stand", gameState);
 
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
 
-                await showPopup(gameState.message, gameVisualElements);
+                if (gameState.message != "reshuffle") {
+                    await showPopup(gameState.message, gameVisualElements);
+                }
                 
                 // show split message if there is one
                 if (gameState.splitMessage != "") {
@@ -562,7 +593,7 @@ window.onload = function () {
             // check for bust
             if (gameState.message == "bust") {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
     
                 await showPopup("bust", gameVisualElements);
 
@@ -570,7 +601,7 @@ window.onload = function () {
                 await setUpTable(gameState, gameVisualElements);
             } else {
                 resetDealerHandRendering(gameVisualElements.dealerHandElement);
-                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement);
+                renderDealerHand(gameState.displayDealerHand, gameVisualElements.dealerHandElement, true);
     
                 await showPopup(gameState.message, gameVisualElements);
 

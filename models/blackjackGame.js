@@ -6,7 +6,6 @@ class BlackjackGame {
     reshuffleThreshold = 0.5;
     cash = 100;
     cardDeck;
-    cardDeckLength;
     playerHand;
     dealerHand;
     bet = 0;
@@ -62,7 +61,7 @@ class BlackjackGame {
 
     // the function is just another descriptive name for generating new deck
     reshuffleCards() {
-        return this.generateCardDeck(this.cardValues, this.cardSuits, this.numDecks);
+        this.generateCardDeck(this.cardValues, this.cardSuits, this.numDecks);
     }
 
     dealCards(cardDeck) {
@@ -281,15 +280,15 @@ class BlackjackGame {
     async wrapUpGame(action) {
         this.cash = this.getResults(action);
         this.bet = 0;   
-
+        
         // necessary to for front end to show the final dealer hand 
         this.setDisplayDealerHand(this.dealerHand);
 
 
         // check if it's time to reshuffle the cards
-        if(this.cardDeck.length < this.cardDeckLength * this.reshuffleThreshold) {
+        if(this.cardDeck.length < (this.numDecks * 52 * this.reshuffleThreshold)) {
             this.setMessage("reshuffle");
-            this.cardDeck = this.reshuffleCards(this.cardValues, this.cardSuits, this.numDecks);
+            this.reshuffleCards(this.cardValues, this.cardSuits, this.numDecks);
         }
 
     }
