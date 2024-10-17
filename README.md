@@ -13,7 +13,7 @@
 
 ## About The Project
 
-[![Blackjack Screen Shot][blackjack-screenshot]]
+![Blackjack Screen Shot][blackjack-screenshot]
 
 ### Built With
 
