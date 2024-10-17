@@ -40,4 +40,5 @@
    ```sh
    node app
    ```
+
 [blackjack-screenshot]: screenshot.png
