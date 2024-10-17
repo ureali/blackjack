@@ -13,7 +13,7 @@
 
 ## About The Project
 
-[![Blackjack Screen Shot][blackjack-screenshot]](stanislavnehretskyi.com/blackjack)
+[![Blackjack Screen Shot][blackjack-screenshot]]
 
 ### Built With
 
